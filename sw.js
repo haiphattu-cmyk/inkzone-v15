@@ -1,4 +1,4 @@
-const CACHE="inkzone-v15-1-shell";
+const CACHE="inkzone-v15-3-shell";
 const APP=["./","./index.html","./manifest.webmanifest"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP))));
 self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));

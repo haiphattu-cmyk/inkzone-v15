@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.1</title>
+<title>InkZone V15.3</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -31,12 +31,15 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.1</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • Coverage → Ink Key</div></header>
+<header><h1>InkZone V15.3</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • Ink Fountain • Coverage → Ink Key</div></header>
 <main>
 
 <section class="card">
 <div class="title">1. Chọn artwork</div>
 <input id="file" type="file" accept=".pdf,.jpg,.jpeg,image/jpeg,application/pdf">
+<div class="grid" style="margin-top:8px">
+<div><label>Trang PDF</label><input id="pageNo" type="number" value="1" min="1" step="1"></div>
+</div>
 <div id="fileInfo" class="small" style="margin-top:8px">PDF hoặc JPEG/JPG. File được xử lý trong trình duyệt.</div>
 <canvas id="preview" class="preview"></canvas>
 </section>
@@ -48,12 +51,14 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <div><label>Khổ máy H (mm)</label><input id="sh" type="number" value="520"></div>
 <div><label>Số zone</label><input id="zones" type="number" value="21" min="1" max="100"></div>
 <div><label>TAC cảnh báo (%)</label><input id="tac" type="number" value="300"></div>
+<div><label>Kích thước artwork</label><select id="sizeMode"><option value="pdf">PDF tự đọc (CropBox)</option><option value="manual">Nhập tay</option></select></div>
 <div><label>Artwork W (mm)</label><input id="aw" type="number" placeholder="PDF tự đọc"></div>
 <div><label>Artwork H (mm)</label><input id="ah" type="number" placeholder="PDF tự đọc"></div>
 <div><label>Offset X (mm)</label><input id="ox" type="text" value="auto" inputmode="decimal"></div>
 <div><label>Offset Y (mm)</label><input id="oy" type="text" value="auto" inputmode="decimal"></div>
 </div>
-<div class="small" style="margin-top:8px">Mặc định artwork căn giữa. Zone chia trên toàn bộ khổ máy, không chia theo artwork.</div>
+<div id="boxInfo" class="status" style="margin-top:8px">Chưa đọc PDF box.</div>
+<div class="small" style="margin-top:8px">Mặc định artwork căn giữa. Zone chia trên toàn bộ khổ máy, không chia theo artwork. Với PDF, V15.2 dùng vùng nhìn thấy (CropBox) làm kích thước tự động; nếu file có bleed/trim đặc biệt, có thể chọn “Nhập tay”.</div>
 </section>
 
 <section class="card">
@@ -68,23 +73,23 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </section>
 
 <section class="card">
-<div class="title">4. Phân tích</div>
+<div class="title">5. Phân tích</div>
 <div class="row"><button id="analyze">Phân tích artwork</button><button id="export" class="secondary" disabled>Xuất CSV</button></div>
 <div id="status" class="status" style="margin-top:10px">Chưa phân tích.</div>
 </section>
 
 <section class="card">
-<div class="title">5. Ink Key theo 21 zone</div>
+<div class="title">6. Ink Key theo 21 zone</div>
 <div id="summary" class="small">Chưa có dữ liệu.</div>
 <div class="tablewrap" style="margin-top:10px">
 <table id="tbl"><thead><tr>
-<th>Zone</th><th>X mm</th><th>C cov%</th><th>C key</th><th>M cov%</th><th>M key</th><th>Y cov%</th><th>Y key</th><th>K cov%</th><th>K key</th><th>TIL%</th><th>TAC</th>
+<th>Zone</th><th>X mm</th><th>C cov%</th><th>C Fountain</th><th>C key</th><th>M cov%</th><th>M Fountain</th><th>M key</th><th>Y cov%</th><th>Y Fountain</th><th>Y key</th><th>K cov%</th><th>K Fountain</th><th>K key</th><th>TIL%</th><th>TAC</th>
 </tr></thead><tbody></tbody></table>
 </div>
 </section>
 
 <section class="card">
-<div class="title">6. Biểu đồ Ink Key</div><div id="bars"></div>
+<div class="title">7. Biểu đồ Ink Key</div><div id="bars"></div>
 <div class="small" style="margin-top:9px">Các giá trị Ink Key là preset đề xuất dựa trên profile của máy, không phải tỷ lệ mở cơ khí tuyệt đối.</div>
 </section>
 </main>
@@ -132,18 +137,40 @@ function rgbToCmyk(r,g,b){
 async function renderPdf(file){
  const buf=await file.arrayBuffer();
  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
- const page=await pdf.getPage(1);
- const view=page.getViewport({scale:1});
- const aw=view.width*25.4/72, ah=view.height*25.4/72;
- $("aw").value=aw.toFixed(2);$("ah").value=ah.toFixed(2);
- const targetW=1800, scale=Math.min(3,targetW/view.width);
+ const pageNo=Math.max(1,Math.min(+$("pageNo").value||1,pdf.numPages));
+ $("pageNo").value=pageNo;
+ const page=await pdf.getPage(pageNo);
+ const view=page.view || [0,0,612,792];
+ const vw=Math.abs(view[2]-view[0]) || 612, vh=Math.abs(view[3]-view[1]) || 792;
+ const aw=vw*25.4/72, ah=vh*25.4/72;
+
+ // PDF.js exposes page.view as the visible page box. This is the CropBox/visible region used by rendering.
+ // Some builds also expose MediaBox through the internal page info; use it only as diagnostic data.
+ let mediaW=null, mediaH=null;
+ try{
+   const mb=page._pageInfo?.mediaBox;
+   if(Array.isArray(mb)&&mb.length===4){
+     mediaW=Math.abs(mb[2]-mb[0])*25.4/72;
+     mediaH=Math.abs(mb[3]-mb[1])*25.4/72;
+   }
+ }catch(_){}
+
+ if($("sizeMode").value==="pdf" || !$("aw").value || !$("ah").value){
+   $("aw").value=aw.toFixed(2);
+   $("ah").value=ah.toFixed(2);
+ }
+ const mediaTxt=mediaW&&mediaH?` • MediaBox ${mediaW.toFixed(2)}×${mediaH.toFixed(2)} mm`:"";
+ $("boxInfo").className="status good";
+ $("boxInfo").textContent=`PDF trang ${pageNo}/${pdf.numPages} • CropBox/visible ${aw.toFixed(2)}×${ah.toFixed(2)} mm${mediaTxt}`;
+
+ const targetW=1800, scale=Math.min(3,targetW/vw);
  const vp=page.getViewport({scale});
  const canvas=$("preview");canvas.width=Math.round(vp.width);canvas.height=Math.round(vp.height);
  const ctx=canvas.getContext("2d",{willReadFrequently:true});
  await page.render({canvasContext:ctx,viewport:vp}).promise;
  canvas.style.display="block";
- $("fileInfo").textContent=`PDF • ${pdf.numPages} trang • trang 1: ${aw.toFixed(2)} × ${ah.toFixed(2)} mm`;
- return {canvas,aw,ah};
+ $("fileInfo").textContent=`PDF • ${pdf.numPages} trang • đang phân tích trang ${pageNo} • vùng render: CropBox`;
+ return {canvas,aw:+$("aw").value,ah:+$("ah").value,pageNo,cropW:aw,cropH:ah,mediaW,mediaH};
 }
 
 async function renderJpeg(file){
@@ -153,7 +180,9 @@ async function renderJpeg(file){
  const canvas=$("preview"),scale=Math.min(1800/img.naturalWidth,1800/img.naturalHeight,1);
  canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
  const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,canvas.width,canvas.height);canvas.style.display="block";
- $("fileInfo").textContent=`JPEG • ${img.naturalWidth} × ${img.naturalHeight}px • DPI mặc định 96 nếu ảnh không có DPI`;
+ $("boxInfo").className="status";
+ $("boxInfo").textContent=`JPEG • kích thước vật lý lấy từ Artwork W/H. Nếu để trống, V15.3 dùng 96 DPI làm giá trị tạm.`;
+ $("fileInfo").textContent=`JPEG • ${img.naturalWidth} × ${img.naturalHeight}px`;
  return {canvas,aw:+$("aw").value,ah:+$("ah").value};
 }
 
@@ -189,16 +218,28 @@ function sampleZones(canvas,sw,aw,ox,n){
 $("analyze").onclick=async()=>{
  if(!file){$("status").className="status warn";$("status").textContent="Hãy chọn PDF/JPEG.";return}
  const sw=+$("sw").value,n=+$("zones").value,tac=+$("tac").value,aw=+$("aw").value,ah=+$("ah").value;
- if(!aw||!ah){$("status").className="status warn";$("status").textContent="Thiếu kích thước artwork.";return}
+ if(!sw||!n||!aw||!ah){$("status").className="status warn";$("status").textContent="Thiếu khổ máy, số zone hoặc kích thước artwork.";return}
+ if(aw>sw && $("sizeMode").value==="pdf"){$("status").className="status warn";$("status").textContent="Artwork rộng hơn khổ máy. Kiểm tra CropBox hoặc chọn Nhập tay.";return}
  const oxRaw=$("ox").value,oyRaw=$("oy").value;
  const ox=(oxRaw==="auto"||oxRaw==="")?(sw-aw)/2:+oxRaw;
  $("status").className="status";$("status").textContent="Đang tính 21 zone...";
  try{
   let info;
-  if(file.type==="application/pdf")info=await renderPdf(file);else info=await renderJpeg(file);
+  if(file.type==="application/pdf"){
+    info=await renderPdf(file);
+    // In manual mode, renderPdf may report the PDF box while analysis uses the manually entered physical size.
+    info.aw=aw; info.ah=ah;
+  }else{
+    info=await renderJpeg(file);
+    info.aw=aw; info.ah=ah;
+  }
   const cov=sampleZones(info.canvas,sw,aw,ox,n);
-  rows=cov.map((v,i)=>({x:(i+.5)*sw/n,c:v.c,m:v.m,y:v.y,k:v.k,ck:interp(v.c,"C"),mk:interp(v.m,"M"),yk:interp(v.y,"Y"),kk:interp(v.k,"K"),til:v.c+v.m+v.y+v.k,warn:v.c+v.m+v.y+v.k>tac}));
-  $("summary").textContent=`Khổ máy ${sw}×${$("sh").value} mm • ${n} zone • zone ${(sw/n).toFixed(2)} mm • artwork ${aw.toFixed(2)}×${ah.toFixed(2)} mm • X=${ox.toFixed(2)} mm`;
+  rows=cov.map((v,i)=>({x:(i+.5)*sw/n,c:v.c,m:v.m,y:v.y,k:v.k,
+  ck:interp(v.c,"C"),mk:interp(v.m,"M"),yk:interp(v.y,"Y"),kk:interp(v.k,"K"),
+  cf:0,mf:0,yf:0,kf:0,til:v.c+v.m+v.y+v.k,warn:v.c+v.m+v.y+v.k>tac}));
+  if(window.applyFountainToRows) rows=window.applyFountainToRows(rows);
+  rows.forEach(r=>{r.ck=r.cf;r.mk=r.mf;r.yk=r.yf;r.kk=r.kf;});
+  $("summary").textContent=`Khổ máy ${sw}×${$("sh").value} mm • ${n} zone • zone ${(sw/n).toFixed(2)} mm • artwork ${aw.toFixed(2)}×${ah.toFixed(2)} mm • X=${ox.toFixed(2)} mm • ${$("sizeMode").value==="pdf"?"PDF/CropBox":"nhập tay"}`;
   $("status").className="status good";$("status").textContent="Hoàn tất. Coverage đã được chuyển sang Ink Key bằng profile hiệu chuẩn.";
   render();$("export").disabled=false;
  }catch(e){$("status").className="status warn";$("status").textContent="Lỗi phân tích: "+e.message}
@@ -208,7 +249,9 @@ function render(){
  const tb=$("tbl").querySelector("tbody");tb.innerHTML="";
  rows.forEach((r,i)=>{
   const tr=document.createElement("tr");
-  [i+1,r.x.toFixed(1),r.c.toFixed(1),r.ck.toFixed(1),r.m.toFixed(1),r.mk.toFixed(1),r.y.toFixed(1),r.yk.toFixed(1),r.k.toFixed(1),r.kk.toFixed(1),r.til.toFixed(1),r.warn?"⚠":"OK"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+  [i+1,r.x.toFixed(1),r.c.toFixed(1),r.cf.toFixed(1),r.ck.toFixed(1),
+   r.m.toFixed(1),r.mf.toFixed(1),r.mk.toFixed(1),r.y.toFixed(1),r.yf.toFixed(1),r.yk.toFixed(1),
+   r.k.toFixed(1),r.kf.toFixed(1),r.kk.toFixed(1),r.til.toFixed(1),r.warn?"⚠":"OK"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
   tb.appendChild(tr);
  });
  drawBars();
@@ -222,7 +265,7 @@ function drawBars(){
 }
 
 $("saveProfile").onclick=()=>{
- const o={version:"V15.1",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
+ const o={version:"V15.3",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
  localStorage.setItem("inkzone_profile",JSON.stringify(o));$("calStatus").textContent="Đã lưu profile trên điện thoại.";
 };
 $("loadProfile").onclick=()=>{
@@ -233,11 +276,122 @@ $("loadProfile").onclick=()=>{
 $("resetCal").onclick=()=>{buildCal();$("calStatus").textContent="Đã reset calibration."};
 
 $("export").onclick=()=>{
- const h=["Zone","X_center_mm","C_coverage_%","C_inkkey","M_coverage_%","M_inkkey","Y_coverage_%","Y_inkkey","K_coverage_%","K_inkkey","TIL_%","TAC_warning"];
- const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.c.toFixed(2),r.ck.toFixed(2),r.m.toFixed(2),r.mk.toFixed(2),r.y.toFixed(2),r.yk.toFixed(2),r.k.toFixed(2),r.kk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""].join(",")));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_1_21Zone.csv";a.click();
+ const h=["Zone","X_center_mm","C_coverage_%","C_fountain_%","C_inkkey","M_coverage_%","M_fountain_%","M_inkkey","Y_coverage_%","Y_fountain_%","Y_inkkey","K_coverage_%","K_fountain_%","K_inkkey","TIL_%","TAC_warning"];
+ const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.c.toFixed(2),r.cf.toFixed(2),r.ck.toFixed(2),
+ r.m.toFixed(2),r.mf.toFixed(2),r.mk.toFixed(2),r.y.toFixed(2),r.yf.toFixed(2),r.yk.toFixed(2),
+ r.k.toFixed(2),r.kf.toFixed(2),r.kk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""].join(",")));
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_3_21Zone.csv";a.click();
 };
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
+
+<script>
+(function(){
+ const keys=["C","M","Y","K"];
+ let fountainColor="C";
+ const defaultPts=[
+   {x:0,y:0},{x:10,y:10},{x:20,y:20},{x:30,y:30},{x:40,y:40},
+   {x:50,y:50},{x:60,y:60},{x:70,y:70},{x:80,y:80},{x:90,y:90},{x:100,y:100}
+ ];
+ let curves={C:structuredClone(defaultPts),M:structuredClone(defaultPts),Y:structuredClone(defaultPts),K:structuredClone(defaultPts)};
+
+ function fpRender(){
+   const tb=document.querySelector("#curveTable tbody"); if(!tb)return;
+   tb.innerHTML="";
+   curves[fountainColor].forEach((p,i)=>{
+     const tr=document.createElement("tr");
+     tr.innerHTML=`<td><input class="fpX" type="number" min="0" max="100" step="0.1" value="${p.x}"></td>
+                   <td><input class="fpY" type="number" min="0" max="100" step="0.1" value="${p.y}"></td>
+                   <td><button class="delFp" data-i="${i}">×</button></td>`;
+     tb.appendChild(tr);
+   });
+ }
+ function fpRead(){
+   const xs=[...document.querySelectorAll(".fpX")], ys=[...document.querySelectorAll(".fpY")];
+   const arr=xs.map((x,i)=>({x:Math.max(0,Math.min(100,+x.value||0)),y:Math.max(0,Math.min(100,+ys[i].value||0))}));
+   arr.sort((a,b)=>a.x-b.x); curves[fountainColor]=arr;
+ }
+ function fpInterp(c, pts){
+   if(!pts?.length)return c;
+   pts=[...pts].sort((a,b)=>a.x-b.x);
+   if(c<=pts[0].x)return pts[0].y;
+   if(c>=pts[pts.length-1].x)return pts[pts.length-1].y;
+   for(let i=1;i<pts.length;i++){
+     if(c<=pts[i].x){
+       const a=pts[i-1],b=pts[i],t=(c-a.x)/(b.x-a.x||1);
+       return a.y+(b.y-a.y)*t;
+     }
+   }
+   return c;
+ }
+ function getFountain(color,cov){
+   const base=Math.max(0,Math.min(100,+document.querySelector("#fBase")?.value||0));
+   const curve=fpInterp(Math.max(0,Math.min(100,cov)),curves[color]);
+   return Math.max(base,Math.min(100,curve));
+ }
+ window.inkZoneFountain={curves,getFountain,fpInterp};
+
+ document.addEventListener("click",e=>{
+   const tab=e.target.closest(".tab");
+   if(tab){
+     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+     tab.classList.add("active"); fountainColor=tab.dataset.color; fpRender();
+   }
+   if(e.target.id==="addPoint"){
+     fpRead();
+     const arr=curves[fountainColor];
+     let x=50;
+     if(arr.length) x=Math.max(0,Math.min(100,arr[arr.length-1].x-5));
+     arr.push({x,y:fpInterp(x,arr)}); arr.sort((a,b)=>a.x-b.x); fpRender();
+   }
+   if(e.target.id==="resetCurve"){
+     curves[fountainColor]=structuredClone(defaultPts); fpRender();
+   }
+   if(e.target.classList.contains("delFp")){
+     fpRead();
+     curves[fountainColor].splice(+e.target.dataset.i,1);
+     if(!curves[fountainColor].length)curves[fountainColor]=[{x:0,y:0}];
+     fpRender();
+   }
+   if(e.target.id==="saveFountain"){
+     fpRead();
+     const payload={version:"V15.3",name:document.querySelector("#fpName").value||"Default",
+       base:+document.querySelector("#fBase").value||0,curves};
+     localStorage.setItem("inkzone_fountain_v15_3",JSON.stringify(payload));
+     const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã lưu Fountain Profile.";
+   }
+   if(e.target.id==="loadFountain"){
+     try{
+       const p=JSON.parse(localStorage.getItem("inkzone_fountain_v15_3")||"null");
+       if(!p)throw new Error("none");
+       document.querySelector("#fpName").value=p.name||"Default";
+       document.querySelector("#fBase").value=p.base??0;
+       curves={C:p.curves.C||structuredClone(defaultPts),M:p.curves.M||structuredClone(defaultPts),
+               Y:p.curves.Y||structuredClone(defaultPts),K:p.curves.K||structuredClone(defaultPts)};
+       window.inkZoneFountain.curves=curves;
+       const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã nạp Fountain Profile.";
+       fpRender();
+     }catch(_){
+       const s=document.querySelector("#fountainStatus");s.className="status warn";s.textContent="Chưa có Fountain Profile đã lưu.";
+     }
+   }
+ });
+ fpRender();
+
+ // Expose helper for analysis code.
+ window.applyFountainToRows=function(rows){
+   fpRead();
+   return rows.map(r=>{
+     ["C","M","Y","K"].forEach(c=>{
+       const cov=+r[c+"cov"]||0;
+       r[c+"fountain"]=+getFountain(c,cov).toFixed(1);
+       r[c+"key"]=r[c+"fountain"];
+     });
+     return r;
+   });
+ };
+})();
+</script>
+
 </body>
 </html>
