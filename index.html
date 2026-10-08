@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.3</title>
+<title>InkZone V15.4</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -31,7 +31,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.3</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • Ink Fountain • Coverage → Ink Key</div></header>
+<header><h1>InkZone V15.4</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • KMCY • Ink Fountain • Coverage → Ink Key</div></header>
 <main>
 
 <section class="card">
@@ -72,24 +72,68 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <div id="calStatus" class="small" style="margin-top:8px"></div>
 </section>
 
+
+<section class="card" id="fountainCard">
+<div class="title">4. Ink Fountain</div>
+<div class="small">Coverage → Correction → Ink Fountain → Ink Key. Mỗi màu K/M/C/Y có đường cong riêng.</div>
+<div class="tabs" style="margin-top:10px">
+<button class="tab active" data-color="K">K</button>
+<button class="tab" data-color="M">M</button>
+<button class="tab" data-color="C">C</button>
+<button class="tab" data-color="Y">Y</button>
+</div>
+<div class="grid" style="margin-top:10px">
+<div><label>Fountain base %</label><input id="fBase" type="number" value="0" min="0" max="100" step="0.1"></div>
+<div><label>Profile name</label><input id="fpName" type="text" value="KMCY Default"></div>
+</div>
+<div class="tablewrap" style="margin-top:10px">
+<table id="curveTable"><thead><tr><th>Coverage %</th><th>Fountain %</th><th></th></tr></thead><tbody></tbody></table>
+</div>
+<div class="row" style="margin-top:10px">
+<button id="addPoint">+ Thêm điểm</button><button id="resetCurve" class="secondary">Reset 0→100</button>
+</div>
+<div class="row" style="margin-top:10px">
+<button id="saveFountain">Lưu Fountain</button><button id="loadFountain" class="secondary">Nạp Fountain</button>
+</div>
+<div id="fountainStatus" class="small" style="margin-top:8px">Chưa có Fountain profile.</div>
+</section>
+
+<section class="card" id="correctionCard">
+<div class="title">5. Correction Curve</div>
+<div class="small">Hiệu chỉnh riêng từng màu trước khi tính Fountain. Ví dụ 50% Coverage → 35% demand nếu dữ liệu thực tế của máy cho thấy như vậy.</div>
+<div class="tabs" style="margin-top:10px">
+<button class="ctab active" data-color="K">K</button>
+<button class="ctab" data-color="M">M</button>
+<button class="ctab" data-color="C">C</button>
+<button class="ctab" data-color="Y">Y</button>
+</div>
+<div class="tablewrap" style="margin-top:10px">
+<table id="correctionTable"><thead><tr><th>Coverage %</th><th>Corrected demand %</th><th></th></tr></thead><tbody></tbody></table>
+</div>
+<div class="row" style="margin-top:10px">
+<button id="addCorrPoint">+ Thêm điểm</button><button id="resetCorr" class="secondary">Reset 0→100</button>
+</div>
+<div id="correctionStatus" class="small" style="margin-top:8px">KMCY đang ở đường cong trung tính.</div>
+</section>
+
 <section class="card">
-<div class="title">5. Phân tích</div>
+<div class="title">6. Phân tích</div>
 <div class="row"><button id="analyze">Phân tích artwork</button><button id="export" class="secondary" disabled>Xuất CSV</button></div>
 <div id="status" class="status" style="margin-top:10px">Chưa phân tích.</div>
 </section>
 
 <section class="card">
-<div class="title">6. Ink Key theo 21 zone</div>
+<div class="title">7. Ink Key theo 21 zone</div>
 <div id="summary" class="small">Chưa có dữ liệu.</div>
 <div class="tablewrap" style="margin-top:10px">
 <table id="tbl"><thead><tr>
-<th>Zone</th><th>X mm</th><th>C cov%</th><th>C Fountain</th><th>C key</th><th>M cov%</th><th>M Fountain</th><th>M key</th><th>Y cov%</th><th>Y Fountain</th><th>Y key</th><th>K cov%</th><th>K Fountain</th><th>K key</th><th>TIL%</th><th>TAC</th>
+<th>Zone</th><th>X mm</th><th>K cov%</th><th>K Fountain</th><th>K key</th><th>M cov%</th><th>M Fountain</th><th>M key</th><th>C cov%</th><th>C Fountain</th><th>C key</th><th>Y cov%</th><th>Y Fountain</th><th>Y key</th><th>TIL%</th><th>TAC</>
 </tr></thead><tbody></tbody></table>
 </div>
 </section>
 
 <section class="card">
-<div class="title">7. Biểu đồ Ink Key</div><div id="bars"></div>
+<div class="title">8. Biểu đồ Ink Key</div><div id="bars"></div>
 <div class="small" style="margin-top:9px">Các giá trị Ink Key là preset đề xuất dựa trên profile của máy, không phải tỷ lệ mở cơ khí tuyệt đối.</div>
 </section>
 </main>
@@ -238,9 +282,8 @@ $("analyze").onclick=async()=>{
   ck:interp(v.c,"C"),mk:interp(v.m,"M"),yk:interp(v.y,"Y"),kk:interp(v.k,"K"),
   cf:0,mf:0,yf:0,kf:0,til:v.c+v.m+v.y+v.k,warn:v.c+v.m+v.y+v.k>tac}));
   if(window.applyFountainToRows) rows=window.applyFountainToRows(rows);
-  rows.forEach(r=>{r.ck=r.cf;r.mk=r.mf;r.yk=r.yf;r.kk=r.kf;});
   $("summary").textContent=`Khổ máy ${sw}×${$("sh").value} mm • ${n} zone • zone ${(sw/n).toFixed(2)} mm • artwork ${aw.toFixed(2)}×${ah.toFixed(2)} mm • X=${ox.toFixed(2)} mm • ${$("sizeMode").value==="pdf"?"PDF/CropBox":"nhập tay"}`;
-  $("status").className="status good";$("status").textContent="Hoàn tất. Coverage đã được chuyển sang Ink Key bằng profile hiệu chuẩn.";
+  $("status").className="status good";$("status").textContent="Hoàn tất. Coverage → Ink Fountain → Ink Key.";
   render();$("export").disabled=false;
  }catch(e){$("status").className="status warn";$("status").textContent="Lỗi phân tích: "+e.message}
 };
@@ -249,23 +292,23 @@ function render(){
  const tb=$("tbl").querySelector("tbody");tb.innerHTML="";
  rows.forEach((r,i)=>{
   const tr=document.createElement("tr");
-  [i+1,r.x.toFixed(1),r.c.toFixed(1),r.cf.toFixed(1),r.ck.toFixed(1),
-   r.m.toFixed(1),r.mf.toFixed(1),r.mk.toFixed(1),r.y.toFixed(1),r.yf.toFixed(1),r.yk.toFixed(1),
-   r.k.toFixed(1),r.kf.toFixed(1),r.kk.toFixed(1),r.til.toFixed(1),r.warn?"⚠":"OK"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+  [i+1,r.x.toFixed(1),r.k.toFixed(1),r.kf.toFixed(1),r.kk.toFixed(1),
+   r.m.toFixed(1),r.mf.toFixed(1),r.mk.toFixed(1),r.c.toFixed(1),r.cf.toFixed(1),r.ck.toFixed(1),
+   r.y.toFixed(1),r.yf.toFixed(1),r.yk.toFixed(1),r.til.toFixed(1),r.warn?"⚠":"OK"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
   tb.appendChild(tr);
  });
  drawBars();
 }
 function drawBars(){
  const b=$("bars");b.innerHTML="";
- [["ck","C"],["mk","M"],["yk","Y"],["kk","K"]].forEach(([key,n])=>{
+ [["kk","K"],["mk","M"],["ck","C"],["yk","Y"]].forEach(([key,n])=>{
   const t=document.createElement("div");t.className="small";t.style.marginTop="7px";t.textContent=n+" Ink Key";b.appendChild(t);
   rows.forEach((r,i)=>{const w=document.createElement("div");w.style.display="flex";w.style.gap="6px";w.style.alignItems="center";w.style.margin="3px 0";w.innerHTML=`<span style="width:22px;font-size:11px">${i+1}</span><div class="bar" style="flex:1"><i style="width:${r[key]}%"></i></div><span style="width:38px;font-size:11px">${r[key].toFixed(0)}</span>`;b.appendChild(w)});
  });
 }
 
 $("saveProfile").onclick=()=>{
- const o={version:"V15.3",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
+ const o={version:"V15.4",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
  localStorage.setItem("inkzone_profile",JSON.stringify(o));$("calStatus").textContent="Đã lưu profile trên điện thoại.";
 };
 $("loadProfile").onclick=()=>{
@@ -276,24 +319,47 @@ $("loadProfile").onclick=()=>{
 $("resetCal").onclick=()=>{buildCal();$("calStatus").textContent="Đã reset calibration."};
 
 $("export").onclick=()=>{
- const h=["Zone","X_center_mm","C_coverage_%","C_fountain_%","C_inkkey","M_coverage_%","M_fountain_%","M_inkkey","Y_coverage_%","Y_fountain_%","Y_inkkey","K_coverage_%","K_fountain_%","K_inkkey","TIL_%","TAC_warning"];
- const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.c.toFixed(2),r.cf.toFixed(2),r.ck.toFixed(2),
- r.m.toFixed(2),r.mf.toFixed(2),r.mk.toFixed(2),r.y.toFixed(2),r.yf.toFixed(2),r.yk.toFixed(2),
- r.k.toFixed(2),r.kf.toFixed(2),r.kk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""].join(",")));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_3_21Zone.csv";a.click();
+ const h=["Zone","X_center_mm","K_coverage_%","K_fountain_%","K_inkkey","M_coverage_%","M_fountain_%","M_inkkey","C_coverage_%","C_fountain_%","C_inkkey","Y_coverage_%","Y_fountain_%","Y_inkkey","TIL_%","TAC_warning"];
+ const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.k.toFixed(2),r.kf.toFixed(2),r.kk.toFixed(2),
+ r.m.toFixed(2),r.mf.toFixed(2),r.mk.toFixed(2),r.c.toFixed(2),r.cf.toFixed(2),r.ck.toFixed(2),
+ r.y.toFixed(2),r.yf.toFixed(2),r.yk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""] .join(",")));
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_4_KMCY_21Zone.csv";a.click();
 };
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
 
+
 <script>
 (function(){
- const keys=["C","M","Y","K"];
- let fountainColor="C";
+ const base=[{x:0,y:0},{x:10,y:10},{x:20,y:20},{x:30,y:30},{x:40,y:40},{x:50,y:50},{x:60,y:60},{x:70,y:70},{x:80,y:80},{x:90,y:90},{x:100,y:100}];
+ let active="K", curves={K:structuredClone(base),M:structuredClone(base),C:structuredClone(base),Y:structuredClone(base)};
+ const clamp2=v=>Math.max(0,Math.min(100,v));
+ function read(){const xs=[...document.querySelectorAll(".corrX")],ys=[...document.querySelectorAll(".corrY")];curves[active]=xs.map((x,i)=>({x:clamp2(+x.value||0),y:clamp2(+ys[i].value||0)})).sort((a,b)=>a.x-b.x)}
+ function interp2(v,p){p=[...(p||[])].sort((a,b)=>a.x-b.x);if(!p.length)return v;if(v<=p[0].x)return p[0].y;if(v>=p[p.length-1].x)return p[p.length-1].y;for(let i=1;i<p.length;i++)if(v<=p[i].x){const a=p[i-1],b=p[i],u=(v-a.x)/(b.x-a.x||1);return a.y+(b.y-a.y)*u}return v}
+ function render(){const tb=document.querySelector("#correctionTable tbody");if(!tb)return;tb.innerHTML="";curves[active].forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input class="corrX" type="number" min="0" max="100" step=".1" value="${p.x}"></td><td><input class="corrY" type="number" min="0" max="100" step=".1" value="${p.y}"></td><td><button class="delCorr" data-i="${i}">×</button></td>`;tb.appendChild(tr)})}
+ window.getCorrectionValue=(color,cov)=>{read();return clamp2(interp2(clamp2(cov),curves[color]))};
+ window.getCorrectionProfile=()=>{read();return curves};
+ window.setCorrectionProfile=v=>{if(v){curves={K:v.K||structuredClone(base),M:v.M||structuredClone(base),C:v.C||structuredClone(base),Y:v.Y||structuredClone(base)};render()}};
+ document.addEventListener("click",e=>{
+  const b=e.target.closest(".ctab");
+  if(b){read();document.querySelectorAll(".ctab").forEach(x=>x.classList.remove("active"));b.classList.add("active");active=b.dataset.color;render()}
+  if(e.target.id==="addCorrPoint"){read();const a=curves[active],x=a.length?Math.max(0,a[a.length-1].x-5):50;a.push({x,y:interp2(x,a)});a.sort((u,v)=>u.x-v.x);render()}
+  if(e.target.id==="resetCorr"){curves[active]=structuredClone(base);render()}
+  if(e.target.classList.contains("delCorr")){read();curves[active].splice(+e.target.dataset.i,1);if(!curves[active].length)curves[active]=[{x:0,y:0}];render()}
+ });
+ render();
+})();
+</script>
+
+<script>
+(function(){
+ const keys=["K","M","C","Y"];
+ let fountainColor="K";
  const defaultPts=[
    {x:0,y:0},{x:10,y:10},{x:20,y:20},{x:30,y:30},{x:40,y:40},
    {x:50,y:50},{x:60,y:60},{x:70,y:70},{x:80,y:80},{x:90,y:90},{x:100,y:100}
  ];
- let curves={C:structuredClone(defaultPts),M:structuredClone(defaultPts),Y:structuredClone(defaultPts),K:structuredClone(defaultPts)};
+ let curves={K:structuredClone(defaultPts),M:structuredClone(defaultPts),C:structuredClone(defaultPts),Y:structuredClone(defaultPts)};
 
  function fpRender(){
    const tb=document.querySelector("#curveTable tbody"); if(!tb)return;
@@ -355,8 +421,7 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
    }
    if(e.target.id==="saveFountain"){
      fpRead();
-     const payload={version:"V15.3",name:document.querySelector("#fpName").value||"Default",
-       base:+document.querySelector("#fBase").value||0,curves};
+     const payload={version:"V15.4",name:document.querySelector("#fpName").value||"Default",base:+document.querySelector("#fBase").value||0,curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
      localStorage.setItem("inkzone_fountain_v15_3",JSON.stringify(payload));
      const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã lưu Fountain Profile.";
    }
@@ -366,9 +431,9 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
        if(!p)throw new Error("none");
        document.querySelector("#fpName").value=p.name||"Default";
        document.querySelector("#fBase").value=p.base??0;
-       curves={C:p.curves.C||structuredClone(defaultPts),M:p.curves.M||structuredClone(defaultPts),
-               Y:p.curves.Y||structuredClone(defaultPts),K:p.curves.K||structuredClone(defaultPts)};
+       curves={K:p.curves.K||structuredClone(defaultPts),M:p.curves.M||structuredClone(defaultPts),C:p.curves.C||structuredClone(defaultPts),Y:p.curves.Y||structuredClone(defaultPts)};
        window.inkZoneFountain.curves=curves;
+       if(p.correction&&window.setCorrectionProfile)window.setCorrectionProfile(p.correction);
        const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã nạp Fountain Profile.";
        fpRender();
      }catch(_){
@@ -382,10 +447,13 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
  window.applyFountainToRows=function(rows){
    fpRead();
    return rows.map(r=>{
-     ["C","M","Y","K"].forEach(c=>{
-       const cov=+r[c+"cov"]||0;
-       r[c+"fountain"]=+getFountain(c,cov).toFixed(1);
-       r[c+"key"]=r[c+"fountain"];
+     const map={C:"c",M:"m",Y:"y",K:"k"};
+     ["K","M","C","Y"].forEach(c=>{
+       const cov=+r[map[c]]||0;
+       const corrected=window.getCorrectionValue?window.getCorrectionValue(c,cov):cov;
+       const fountain=+getFountain(c,corrected).toFixed(1);
+       r[c.toLowerCase()+"f"]=fountain;
+       r[c.toLowerCase()+"k"]=+interp(fountain,c).toFixed(1);
      });
      return r;
    });
