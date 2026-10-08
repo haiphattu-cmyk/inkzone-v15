@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.5.1</title>
+<title>InkZone V16</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -63,10 +63,34 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
  .machine-head,.machine-row{grid-template-columns:55px repeat(21,minmax(34px,1fr));min-width:0}
  .machine-row>div{min-height:145px}.key-cell{height:130px}.key-track{height:78px;width:14px}.machine-nav{display:none}
 }
+
+/* V16 Artwork View */
+.v16-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.v16-toolbar button,.v16-modal-foot button{border:0;border-radius:12px;padding:10px 13px;font-weight:800;background:#111827;color:#fff}
+.v16-toolbar button.secondary,.v16-modal-foot button{background:#e8edf3;color:#111827}
+.v16-art-stage{position:relative;width:100%;height:min(62vh,560px);min-height:280px;background:#0f172a;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
+#artViewCanvas{max-width:100%;max-height:100%;display:block;touch-action:none}
+.v16-art-empty{position:absolute;color:#cbd5e1;font-weight:700;pointer-events:none}
+.v16-modal{display:none;position:fixed;inset:0;background:#020617;z-index:99999;color:#fff}
+.v16-modal.open{display:flex;flex-direction:column}
+.v16-modal-head{height:58px;display:flex;align-items:center;gap:14px;padding:8px 14px;background:#0b1220;border-bottom:1px solid #334155}
+.v16-modal-head strong{font-size:18px}
+.v16-modal-head span{margin-right:auto;color:#cbd5e1;font-size:13px}
+.v16-modal-head button{border:0;border-radius:10px;padding:9px 12px;background:#e8edf3;color:#111827;font-weight:800}
+.v16-modal-stage{flex:1;position:relative;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center}
+#artModalCanvas{display:block;touch-action:none}
+.v16-modal-foot{padding:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:#0b1220}
+.v16-modal-foot button{padding:9px 12px}
+@media (orientation:landscape){
+  .v16-art-stage{height:72vh}
+  .v16-modal-head{height:48px}
+  .v16-modal-foot{padding:7px}
+}
+
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.5.1</h1><div class="sub">Machine View • PDF/JPEG • 21 Ink Key • KMCY • Coverage → Correction → Fountain → Ink Key</div></header>
+<header><h1>InkZone V16</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Calibration</div></header>
 <main>
 
 <section class="card">
@@ -157,6 +181,39 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <div id="status" class="status" style="margin-top:10px">Chưa phân tích.</div>
 </section>
 
+
+<section class="card v16-artwork-card">
+  <div class="title">🖼 3. ARTWORK VIEW</div>
+  <div class="v16-toolbar">
+    <button id="artFullBtn">Xem full màn hình</button>
+    <button id="artFitBtn" class="secondary">Fit</button>
+    <button id="art100Btn" class="secondary">100%</button>
+    <button id="artMachineBtn" class="secondary">MACHINE SHEET</button>
+    <button id="artZonesBtn" class="secondary">21 ZONE</button>
+  </div>
+  <div class="v16-art-stage" id="artStage">
+    <canvas id="artViewCanvas"></canvas>
+    <div class="v16-art-empty" id="artEmpty">Chọn PDF/JPEG để xem artwork.</div>
+  </div>
+  <div class="small">Pinch/zoom, kéo để di chuyển. Xoay ngang iPhone để xem toàn bộ artwork và 21 zone.</div>
+</section>
+
+<div id="artModal" class="v16-modal" aria-hidden="true">
+  <div class="v16-modal-head">
+    <strong>ARTWORK VIEW</strong>
+    <span id="artModeLabel">FIT</span>
+    <button id="artCloseBtn">Đóng</button>
+  </div>
+  <div class="v16-modal-stage" id="artModalStage">
+    <canvas id="artModalCanvas"></canvas>
+  </div>
+  <div class="v16-modal-foot">
+    <button id="modalFitBtn">Fit</button>
+    <button id="modal100Btn">100%</button>
+    <button id="modalSheetBtn">MACHINE SHEET</button>
+    <button id="modalZonesBtn">21 ZONE</button>
+  </div>
+</div>
 <section class="card" id="machineViewCard">
 <div class="title">7. MACHINE VIEW • 21 INK KEY</div>
 <div id="summary" class="small">Chưa có dữ liệu.</div>
@@ -561,6 +618,183 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
      return r;
    });
  };
+})();
+</script>
+
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fileInput = $("file");
+  const preview = $("preview");
+  const artCanvas = $("artViewCanvas");
+  const artStage = $("artStage");
+  const artEmpty = $("artEmpty");
+  const modal = $("artModal");
+  const modalCanvas = $("artModalCanvas");
+  const modalStage = $("artModalStage");
+  if (!fileInput || !artCanvas || !modalCanvas) return;
+
+  const S = {
+    bitmap:null, pdfPage:null, pdfDoc:null,
+    pdfPts:null, pdfScale:1,
+    machine:false, zones:false,
+    zoom:1, panX:0, panY:0,
+    mZoom:1, mPanX:0, mPanY:0,
+    pointers:new Map(), lastDist:0, lastMid:null,
+    mPointers:new Map(), mLastDist:0, mLastMid:null
+  };
+
+  function drawToCanvas(canvas, box, opts){
+    const ctx=canvas.getContext("2d");
+    const w=box.clientWidth || box.width || 900;
+    const h=box.clientHeight || box.height || 600;
+    const iw=S.bitmap ? S.bitmap.width : (S.pdfPts ? S.pdfPts.w*S.pdfScale : 1);
+    const ih=S.bitmap ? S.bitmap.height : (S.pdfPts ? S.pdfPts.h*S.pdfScale : 1);
+    const fit=Math.min((w-24)/iw,(h-24)/ih);
+    const z=opts.zoom || 1;
+    let dw=iw*fit*z, dh=ih*fit*z;
+    let x=(w-dw)/2+(opts.panX||0), y=(h-dh)/2+(opts.panY||0);
+
+    canvas.width=Math.max(1,Math.floor(w*devicePixelRatio));
+    canvas.height=Math.max(1,Math.floor(h*devicePixelRatio));
+    canvas.style.width=w+"px"; canvas.style.height=h+"px";
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    ctx.fillStyle=opts.dark ? "#0f172a" : "#ffffff"; ctx.fillRect(0,0,w,h);
+
+    if(S.machine){
+      const sw=720, sh=520;
+      const sheetFit=Math.min((w-24)/sw,(h-24)/sh);
+      const sx=sw*sheetFit, sy=sh*sheetFit;
+      const ox=(w-sx)/2, oy=(h-sy)/2;
+      ctx.fillStyle="#fff"; ctx.fillRect(ox,oy,sx,sy);
+      if(S.bitmap){
+        const scale=Math.min(sx/720,sy/520);
+        const aw=S.bitmap.width*scale, ah=S.bitmap.height*scale;
+        const ax=ox+(sx-aw)/2, ay=oy+(sy-ah)/2;
+        ctx.drawImage(S.bitmap,ax,ay,aw,ah);
+        if(S.zones) drawZoneLines(ctx,ox,oy,sx,sy);
+      }
+    }else{
+      if(S.bitmap) ctx.drawImage(S.bitmap,x,y,dw,dh);
+      else if(S.pdfPage){
+        S.pdfPage.render({canvasContext:ctx,viewport:S.pdfPage.getViewport({scale:fit*z}),transform:[1,0,0,1,x-(w-fit*iw)/2,y-(h-fit*ih)/2]}).promise.catch(()=>{});
+      }
+      if(S.zones && (S.bitmap || S.pdfPage)) drawArtworkZones(ctx,x,y,dw,dh,w);
+    }
+  }
+
+  function drawZoneLines(ctx,ox,oy,sx,sy){
+    ctx.save();
+    ctx.strokeStyle="rgba(15,23,42,.32)"; ctx.fillStyle="rgba(15,23,42,.72)";
+    ctx.lineWidth=1;
+    for(let i=0;i<=21;i++){
+      const x=ox+sx*i/21;
+      ctx.beginPath();ctx.moveTo(x,oy);ctx.lineTo(x,oy+sy);ctx.stroke();
+      if(i<21) ctx.fillText(String(i+1).padStart(2,"0"),x+3,oy+15);
+    }
+    ctx.restore();
+  }
+  function drawArtworkZones(ctx,x,y,w,h,stageW){
+    ctx.save();
+    ctx.strokeStyle="rgba(15,23,42,.28)";ctx.fillStyle="rgba(15,23,42,.7)";
+    for(let i=0;i<=21;i++){
+      const xx=x+w*i/21;
+      ctx.beginPath();ctx.moveTo(xx,y);ctx.lineTo(xx,y+h);ctx.stroke();
+      if(i<21)ctx.fillText(String(i+1).padStart(2,"0"),xx+2,y+14);
+    }
+    ctx.restore();
+  }
+
+  function sourceFromPreview(){
+    // Use existing preview canvas when it contains rendered PDF/JPEG.
+    if(preview && preview.width>20 && preview.height>20){
+      const c=document.createElement("canvas"); c.width=preview.width;c.height=preview.height;
+      c.getContext("2d").drawImage(preview,0,0);
+      return c;
+    }
+    return null;
+  }
+
+  function loadArtwork(){
+    const f=fileInput.files && fileInput.files[0];
+    if(!f) return;
+    const isImg=/^image\//.test(f.type) || /\.(jpe?g|png)$/i.test(f.name);
+    if(isImg){
+      const img=new Image();
+      img.onload=()=>{S.bitmap=img;S.pdfPage=null;S.pdfPts=null;artEmpty.style.display="none";refreshArt();};
+      img.src=URL.createObjectURL(f);
+    }else{
+      // Existing V15.5.1 PDF renderer fills #preview. Mirror it after a short delay.
+      S.bitmap=sourceFromPreview();
+      S.pdfPage=null;
+      S.pdfPts=null;
+      setTimeout(()=>{
+        const c=sourceFromPreview();
+        if(c){S.bitmap=c;artEmpty.style.display="none";refreshArt();}
+      },1200);
+      setTimeout(()=>{
+        const c=sourceFromPreview();
+        if(c){S.bitmap=c;artEmpty.style.display="none";refreshArt();}
+      },2500);
+    }
+  }
+
+  function refreshArt(){
+    drawToCanvas(artCanvas,artStage,{zoom:S.zoom,panX:S.panX,panY:S.panY,dark:true});
+    if(modal.classList.contains("open")) drawToCanvas(modalCanvas,modalStage,{zoom:S.mZoom,panX:S.mPanX,panY:S.mPanY,dark:true});
+  }
+
+  function fitMain(){S.zoom=1;S.panX=0;S.panY=0;refreshArt();}
+  function fitModal(){S.mZoom=1;S.mPanX=0;S.mPanY=0;refreshArt();}
+  function openModal(){modal.classList.add("open");modal.setAttribute("aria-hidden","false");fitModal();}
+  function closeModal(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
+
+  $("artFullBtn")?.addEventListener("click",openModal);
+  $("artCloseBtn")?.addEventListener("click",closeModal);
+  $("artFitBtn")?.addEventListener("click",fitMain);
+  $("art100Btn")?.addEventListener("click",()=>{S.zoom=2;refreshArt();});
+  $("artMachineBtn")?.addEventListener("click",()=>{S.machine=!S.machine;refreshArt();});
+  $("artZonesBtn")?.addEventListener("click",()=>{S.zones=!S.zones;refreshArt();});
+  $("modalFitBtn")?.addEventListener("click",fitModal);
+  $("modal100Btn")?.addEventListener("click",()=>{S.mZoom=2;refreshArt();});
+  $("modalSheetBtn")?.addEventListener("click",()=>{S.machine=!S.machine;refreshArt();});
+  $("modalZonesBtn")?.addEventListener("click",()=>{S.zones=!S.zones;refreshArt();});
+
+  fileInput.addEventListener("change",loadArtwork);
+
+  function touchHandlers(el,modalMode){
+    const pts=modalMode?S.mPointers:S.pointers;
+    el.addEventListener("pointerdown",e=>{el.setPointerCapture?.(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});});
+    el.addEventListener("pointermove",e=>{
+      if(!pts.has(e.pointerId))return;
+      const old=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pts.size===1){
+        if(modalMode){S.mPanX+=e.clientX-old.x;S.mPanY+=e.clientY-old.y;}
+        else {S.panX+=e.clientX-old.x;S.panY+=e.clientY-old.y;}
+        refreshArt();
+      }else if(pts.size===2){
+        const a=[...pts.values()][0],b=[...pts.values()][1];
+        const d=Math.hypot(a.x-b.x,a.y-b.y);
+        const last=modalMode?S.mLastDist:S.lastDist;
+        if(last){
+          const factor=d/last;
+          if(modalMode)S.mZoom=Math.max(.4,Math.min(5,S.mZoom*factor));
+          else S.zoom=Math.max(.4,Math.min(5,S.zoom*factor));
+          refreshArt();
+        }
+        if(modalMode)S.mLastDist=d;else S.lastDist=d;
+      }
+    });
+    ["pointerup","pointercancel","pointerleave"].forEach(ev=>el.addEventListener(ev,e=>{
+      pts.delete(e.pointerId);
+      if(pts.size<2){if(modalMode)S.mLastDist=0;else S.lastDist=0;}
+    }));
+  }
+  touchHandlers(artStage,false);touchHandlers(modalStage,true);
+
+  window.addEventListener("resize",refreshArt);
+  setTimeout(loadArtwork,600);
 })();
 </script>
 

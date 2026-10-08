@@ -1,9 +1,8 @@
 {
-  "name":"InkZone V15.5.1",
-  "short_name":"InkZone",
-  "start_url":"./?v=1551",
-  "display":"standalone",
-  "background_color":"#f4f6f8",
-  "theme_color":"#101828",
-  "icons":[]
+  "name": "InkZone V16",
+  "short_name": "InkZone V16",
+  "start_url": "./?v=1600",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a"
 }
