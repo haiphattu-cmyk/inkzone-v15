@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V16</title>
+<title>InkZone V16.2.2</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -18,6 +18,11 @@ input,button{font:inherit}input[type=number],input[type=text],select{width:100%;
 button{border:0;border-radius:10px;padding:11px 13px;background:var(--dark);color:#fff;font-weight:650}
 button.secondary{background:#e9edf2;color:var(--text)}button.ok{background:var(--ok)}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:130px}
+.fountain-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.fountain-box{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}
+.fountain-color{font-size:22px;font-weight:800;margin-bottom:5px}
+@media(max-width:700px){.fountain-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 .status{padding:10px;border-radius:9px;background:#f1f5f9;font-size:13px;line-height:1.45}.good{background:#ecfdf5;color:#065f46}.warn{background:#fff7ed;color:#9a3412}
 .small{font-size:11px;color:var(--muted);line-height:1.45}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
 table{border-collapse:collapse;width:100%;min-width:1060px;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:center;white-space:nowrap}th{background:#f8fafc}
@@ -64,33 +69,41 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
  .machine-row>div{min-height:145px}.key-cell{height:130px}.key-track{height:78px;width:14px}.machine-nav{display:none}
 }
 
-/* V16 Artwork View */
+/* V16.1 Artwork View */
 .v16-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 .v16-toolbar button,.v16-modal-foot button{border:0;border-radius:12px;padding:10px 13px;font-weight:800;background:#111827;color:#fff}
 .v16-toolbar button.secondary,.v16-modal-foot button{background:#e8edf3;color:#111827}
-.v16-art-stage{position:relative;width:100%;height:min(62vh,560px);min-height:280px;background:#0f172a;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
+.v16-art-stage{position:relative;width:100%;height:min(62vh,560px);min-height:280px;background:#fff;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
 #artViewCanvas{max-width:100%;max-height:100%;display:block;touch-action:none}
 .v16-art-empty{position:absolute;color:#cbd5e1;font-weight:700;pointer-events:none}
-.v16-modal{display:none;position:fixed;inset:0;background:#020617;z-index:99999;color:#fff}
-.v16-modal.open{display:flex;flex-direction:column}
-.v16-modal-head{height:58px;display:flex;align-items:center;gap:14px;padding:8px 14px;background:#0b1220;border-bottom:1px solid #334155}
-.v16-modal-head strong{font-size:18px}
-.v16-modal-head span{margin-right:auto;color:#cbd5e1;font-size:13px}
-.v16-modal-head button{border:0;border-radius:10px;padding:9px 12px;background:#e8edf3;color:#111827;font-weight:800}
-.v16-modal-stage{flex:1;position:relative;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center}
-#artModalCanvas{display:block;touch-action:none}
-.v16-modal-foot{padding:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:#0b1220}
-.v16-modal-foot button{padding:9px 12px}
+.v16-modal{display:none;position:fixed;inset:0;background:#fff;z-index:99999;color:#111827;overflow:hidden}
+.v16-modal.open{display:block;position:fixed;inset:0;width:100vw;height:100dvh;height:100vh}
+.v16-modal-head{position:absolute;top:0;left:0;right:0;height:58px;display:flex;align-items:center;gap:14px;padding:8px 14px;background:linear-gradient(to bottom,rgba(0,0,0,.55),rgba(0,0,0,0));border:0;z-index:3;color:#fff;box-sizing:border-box}
+.v16-modal-head strong{font-size:18px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.v16-modal-head span{margin-right:auto;color:#fff;font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.v16-modal-head button{border:0;border-radius:10px;padding:9px 12px;background:rgba(255,255,255,.92);color:#111827;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.v16-modal-stage{position:absolute;inset:0;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center;background:#fff}
+#artModalCanvas{display:block;touch-action:none;background:#fff}
+.v16-modal-foot{position:absolute;left:0;right:0;bottom:0;padding:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:linear-gradient(to top,rgba(0,0,0,.55),rgba(0,0,0,0));z-index:3;box-sizing:border-box}
+.v16-modal-foot button{padding:9px 12px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 @media (orientation:landscape){
   .v16-art-stage{height:72vh}
   .v16-modal-head{height:48px}
   .v16-modal-foot{padding:7px}
 }
+@media (max-width:899px){
+  .v16-modal{padding:0;margin:0;border:0;border-radius:0}
+  .v16-modal-stage{width:100vw;height:100dvh;height:100vh}
+}
+@media (display-mode: standalone){
+  .v16-modal{height:100dvh}
+  .v16-modal-stage{height:100dvh}
+}
 
 </style>
 </head>
 <body>
-<header><h1>InkZone V16</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Calibration</div></header>
+<header><h1>InkZone V16.2.1</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Ink Fountain • Calibration • Edge-to-edge</div></header>
 <main>
 
 <section class="card">
@@ -133,8 +146,30 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 
 
 <section class="card" id="fountainCard">
-<div class="title">4. Ink Fountain</div>
-<div class="small">Coverage → Correction → Ink Fountain → Ink Key. Mỗi màu K/M/C/Y có đường cong riêng.</div>
+<div class="title">4. INK FOUNTAIN • THÔNG SỐ THỰC TẾ CỦA MÁY</div>
+<div class="small">
+Đây là mức Ink Fountain tham chiếu của máy, tách biệt với Ink Key.
+Bộ dữ liệu chuẩn hiện tại: K=6 • M=12 • C=15 • Y=23.
+Các giá trị này được dùng làm mốc cho quá trình Coverage → Correction → Fountain → Ink Key.
+</div>
+
+<div class="fountain-grid" style="margin-top:12px">
+  <div class="fountain-box"><div class="fountain-color">K</div><label>Fountain K (%)</label><input id="fBaseK" type="number" value="6" min="0" max="100" step="0.1"></div>
+  <div class="fountain-box"><div class="fountain-color">M</div><label>Fountain M (%)</label><input id="fBaseM" type="number" value="12" min="0" max="100" step="0.1"></div>
+  <div class="fountain-box"><div class="fountain-color">C</div><label>Fountain C (%)</label><input id="fBaseC" type="number" value="15" min="0" max="100" step="0.1"></div>
+  <div class="fountain-box"><div class="fountain-color">Y</div><label>Fountain Y (%)</label><input id="fBaseY" type="number" value="23" min="0" max="100" step="0.1"></div>
+</div>
+
+<div class="row" style="margin-top:10px">
+  <button id="applyRealFountain">Dùng Fountain máy thực tế</button>
+  <button id="resetRealFountain" class="secondary">Khôi phục 6 / 12 / 15 / 23</button>
+</div>
+<div id="realFountainStatus" class="status good" style="margin-top:8px">
+Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23
+</div>
+
+<div class="title" style="margin-top:16px">Đường cong Fountain theo Coverage</div>
+<div class="small">Có thể hiệu chỉnh riêng từng màu nếu sau này bạn có dữ liệu thực tế Coverage → Fountain. Nếu chưa có, app dùng Fountain máy thực tế làm mốc.</div>
 <div class="tabs" style="margin-top:10px">
 <button class="tab active" data-color="K">K</button>
 <button class="tab" data-color="M">M</button>
@@ -142,11 +177,10 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <button class="tab" data-color="Y">Y</button>
 </div>
 <div class="grid" style="margin-top:10px">
-<div><label>Fountain base %</label><input id="fBase" type="number" value="0" min="0" max="100" step="0.1"></div>
-<div><label>Profile name</label><input id="fpName" type="text" value="KMCY Default"></div>
+<div><label>Profile name</label><input id="fpName" type="text" value="Machine KMCY"></div>
 </div>
 <div class="tablewrap" style="margin-top:10px">
-<table id="curveTable"><thead><tr><th>Coverage %</th><th>Fountain %</th><th></th></tr></thead><tbody></tbody></table>
+<table id="curveTable"><thead><tr><th>Coverage %</th><th>Fountain demand %</th><th></th></tr></thead><tbody></tbody></table>
 </div>
 <div class="row" style="margin-top:10px">
 <button id="addPoint">+ Thêm điểm</button><button id="resetCurve" class="secondary">Reset 0→100</button>
@@ -550,10 +584,19 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
    }
    return c;
  }
+ function getRealBase(color){
+   const el=document.querySelector("#fBase"+color);
+   return Math.max(0,Math.min(100,+(el?.value||0)));
+ }
  function getFountain(color,cov){
-   const base=Math.max(0,Math.min(100,+document.querySelector("#fBase")?.value||0));
+   const base=getRealBase(color);
    const curve=fpInterp(Math.max(0,Math.min(100,cov)),curves[color]);
-   return Math.max(base,Math.min(100,curve));
+   // Fountain demand is anchored to the machine's real fountain reference.
+   // A zero-coverage zone remains zero; positive coverage follows the curve
+   // while respecting the machine reference as a calibration anchor.
+   if((+cov||0)<=0) return 0;
+   const normalized=curve;
+   return Math.max(0,Math.min(100,Math.max(base,normalized)));
  }
  window.inkZoneFountain={curves,getFountain,fpInterp};
 
@@ -579,9 +622,21 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
      if(!curves[fountainColor].length)curves[fountainColor]=[{x:0,y:0}];
      fpRender();
    }
+   if(e.target.id==="applyRealFountain"){
+     const vals={K:6,M:12,C:15,Y:23};
+     Object.entries(vals).forEach(([c,v])=>{const el=document.querySelector("#fBase"+c);if(el)el.value=v;});
+     const st=document.querySelector("#realFountainStatus"); st.className="status good"; st.textContent="Đã dùng Fountain máy thực tế: K 6 • M 12 • C 15 • Y 23";
+   }
+   if(e.target.id==="resetRealFountain"){
+     const vals={K:6,M:12,C:15,Y:23};
+     Object.entries(vals).forEach(([c,v])=>{const el=document.querySelector("#fBase"+c);if(el)el.value=v;});
+     const st=document.querySelector("#realFountainStatus"); st.className="status good"; st.textContent="Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23";
+   }
    if(e.target.id==="saveFountain"){
      fpRead();
-     const payload={version:"V15.5",name:document.querySelector("#fpName").value||"Default",base:+document.querySelector("#fBase").value||0,curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
+     const payload={version:"V16.2",name:document.querySelector("#fpName").value||"Machine KMCY",
+base:{K:getRealBase("K"),M:getRealBase("M"),C:getRealBase("C"),Y:getRealBase("Y")},
+curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
      localStorage.setItem("inkzone_fountain_v15_3",JSON.stringify(payload));
      const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã lưu Fountain Profile.";
    }
@@ -590,7 +645,7 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
        const p=JSON.parse(localStorage.getItem("inkzone_fountain_v15_3")||"null");
        if(!p)throw new Error("none");
        document.querySelector("#fpName").value=p.name||"Default";
-       document.querySelector("#fBase").value=p.base??0;
+       const b=p.base||{}; Object.entries({K:b.K??6,M:b.M??12,C:b.C??15,Y:b.Y??23}).forEach(([c,v])=>{const el=document.querySelector("#fBase"+c);if(el)el.value=v;});
        curves={K:p.curves.K||structuredClone(defaultPts),M:p.curves.M||structuredClone(defaultPts),C:p.curves.C||structuredClone(defaultPts),Y:p.curves.Y||structuredClone(defaultPts)};
        window.inkZoneFountain.curves=curves;
        if(p.correction&&window.setCorrectionProfile)window.setCorrectionProfile(p.correction);
@@ -742,13 +797,13 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
 
   function refreshArt(){
     drawToCanvas(artCanvas,artStage,{zoom:S.zoom,panX:S.panX,panY:S.panY,dark:true});
-    if(modal.classList.contains("open")) drawToCanvas(modalCanvas,modalStage,{zoom:S.mZoom,panX:S.mPanX,panY:S.mPanY,dark:true});
+    if(modal.classList.contains("open")) drawToCanvas(modalCanvas,modalStage,{zoom:S.mZoom,panX:S.mPanX,panY:S.mPanY,dark:false});
   }
 
   function fitMain(){S.zoom=1;S.panX=0;S.panY=0;refreshArt();}
   function fitModal(){S.mZoom=1;S.mPanX=0;S.mPanY=0;refreshArt();}
-  function openModal(){modal.classList.add("open");modal.setAttribute("aria-hidden","false");fitModal();}
-  function closeModal(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
+  function openModal(){modal.classList.add("open");modal.setAttribute("aria-hidden","false");document.documentElement.classList.add("v16-viewer-open");document.body.classList.add("v16-viewer-open");fitModal();}
+  function closeModal(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");document.documentElement.classList.remove("v16-viewer-open");document.body.classList.remove("v16-viewer-open");}
 
   $("artFullBtn")?.addEventListener("click",openModal);
   $("artCloseBtn")?.addEventListener("click",closeModal);
