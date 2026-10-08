@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.5</title>
+<title>InkZone V15.5.1</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -66,7 +66,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.5</h1><div class="sub">Machine View • PDF/JPEG • 21 Ink Key • KMCY • Coverage → Correction → Fountain → Ink Key</div></header>
+<header><h1>InkZone V15.5.1</h1><div class="sub">Machine View • PDF/JPEG • 21 Ink Key • KMCY • Coverage → Correction → Fountain → Ink Key</div></header>
 <main>
 
 <section class="card">
@@ -341,17 +341,6 @@ $("analyze").onclick=async()=>{
  }catch(e){$("status").className="status warn";$("status").textContent="Lỗi phân tích: "+e.message}
 };
 
-function render(){
- const tb=$("tbl").querySelector("tbody");tb.innerHTML="";
- rows.forEach((r,i)=>{
-  const tr=document.createElement("tr");
-  [i+1,r.x.toFixed(1),r.k.toFixed(1),r.kf.toFixed(1),r.kk.toFixed(1),
-   r.m.toFixed(1),r.mf.toFixed(1),r.mk.toFixed(1),r.c.toFixed(1),r.cf.toFixed(1),r.ck.toFixed(1),
-   r.y.toFixed(1),r.yf.toFixed(1),r.yk.toFixed(1),r.til.toFixed(1),r.warn?"⚠":"OK"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
-  tb.appendChild(tr);
- });
- drawBars();
-}
 function drawBars(){
  const b=$("bars");b.innerHTML="";
  [["kk","K"],["mk","M"],["ck","C"],["yk","Y"]].forEach(([key,n])=>{
