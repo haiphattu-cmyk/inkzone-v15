@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15</title>
+<title>InkZone V15.1</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -31,7 +31,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><h1>InkZone V15</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • Coverage → Ink Key</div></header>
+<header><h1>InkZone V15.1</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • Coverage → Ink Key</div></header>
 <main>
 
 <section class="card">
@@ -50,8 +50,8 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <div><label>TAC cảnh báo (%)</label><input id="tac" type="number" value="300"></div>
 <div><label>Artwork W (mm)</label><input id="aw" type="number" placeholder="PDF tự đọc"></div>
 <div><label>Artwork H (mm)</label><input id="ah" type="number" placeholder="PDF tự đọc"></div>
-<div><label>Offset X (mm)</label><input id="ox" type="number" value="auto"></div>
-<div><label>Offset Y (mm)</label><input id="oy" type="number" value="auto"></div>
+<div><label>Offset X (mm)</label><input id="ox" type="text" value="auto" inputmode="decimal"></div>
+<div><label>Offset Y (mm)</label><input id="oy" type="text" value="auto" inputmode="decimal"></div>
 </div>
 <div class="small" style="margin-top:8px">Mặc định artwork căn giữa. Zone chia trên toàn bộ khổ máy, không chia theo artwork.</div>
 </section>
@@ -175,13 +175,13 @@ function sampleZones(canvas,sw,aw,ox,n){
   const ix0=Math.max(zx0,left),ix1=Math.min(zx1,left+aw);
   if(ix1<=ix0){out.push({c:0,m:0,y:0,k:0});continue}
   const px0=Math.max(0,Math.floor((ix0-left)/aw*W)),px1=Math.min(W,Math.ceil((ix1-left)/aw*W));
-  let sc=sm=sy=sk=cnt=0;
+  let sc=0, sm=0, sy=0, sk=0, cnt=0;
   const step=Math.max(1,Math.floor(Math.sqrt(((px1-px0)*H)/30000)));
   for(let y=0;y<H;y+=step)for(let x=px0;x<px1;x+=step){
    const p=(y*W+x)*4,[c,m,yv,k]=rgbToCmyk(data[p],data[p+1],data[p+2]);
    sc+=c;sm+=m;sy+=yv;sk+=k;cnt++;
   }
-  out.push({c:sc/cnt,m:sm/cnt,y:sy/cnt,k:sk/cnt});
+  out.push(cnt ? {c:sc/cnt,m:sm/cnt,y:sy/cnt,k:sk/cnt} : {c:0,m:0,y:0,k:0});
  }
  return out;
 }
@@ -222,7 +222,7 @@ function drawBars(){
 }
 
 $("saveProfile").onclick=()=>{
- const o={version:"V15",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
+ const o={version:"V15.1",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
  localStorage.setItem("inkzone_profile",JSON.stringify(o));$("calStatus").textContent="Đã lưu profile trên điện thoại.";
 };
 $("loadProfile").onclick=()=>{
@@ -235,7 +235,7 @@ $("resetCal").onclick=()=>{buildCal();$("calStatus").textContent="Đã reset cal
 $("export").onclick=()=>{
  const h=["Zone","X_center_mm","C_coverage_%","C_inkkey","M_coverage_%","M_inkkey","Y_coverage_%","Y_inkkey","K_coverage_%","K_inkkey","TIL_%","TAC_warning"];
  const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.c.toFixed(2),r.ck.toFixed(2),r.m.toFixed(2),r.mk.toFixed(2),r.y.toFixed(2),r.yk.toFixed(2),r.k.toFixed(2),r.kk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""].join(",")));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_21Zone.csv";a.click();
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_1_21Zone.csv";a.click();
 };
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
