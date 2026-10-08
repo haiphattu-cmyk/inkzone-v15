@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<title>InkZone V18.3</title>
+<title>InkZone V18.4</title>
 <style>
 :root{--dark:#111827;--card:#fff;--bg:#f3f5f7;--text:#18212f;--muted:#68738a;--line:#d9dee7;--ok:#dff7eb;--warn:#fff1df;--accent:#111827}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
@@ -23,7 +23,7 @@ button{border:0;border-radius:14px;padding:14px 18px;background:var(--accent);co
 </style>
 </head>
 <body>
-<header><h1>InkZone V18.3</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Ink Fountain • Calibration • Machine Screenshot OCR</div></header>
+<header><h1>InkZone V18.4</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Ink Fountain • Calibration • Machine Screenshot OCR • 4-color auto read</div></header>
 <main>
 
 <section class="card">
@@ -31,20 +31,22 @@ button{border:0;border-radius:14px;padding:14px 18px;background:var(--accent);co
 <div class="small">Chọn ảnh chụp màn hình bảng Ink Key. V18.3 đọc theo cấu trúc 4 dòng K/M/C/Y và 21 zone, sau đó bạn xác nhận trước khi học.</div>
 <div class="grid" style="margin-top:14px">
 <div><label>Ảnh Machine Ink Key</label><input id="imgFile" type="file" accept="image/*"></div>
-<div><label>Màu đang đọc</label><select id="ocrColor"><option>K</option><option>M</option><option>C</option><option>Y</option></select></div>
+<div><label>Chế độ</label><select id="ocrMode"><option value="auto">Tự đọc K/M/C/Y</option><option value="single">Đọc 1 màu</option></select></div>
 </div>
+<div class="grid" id="singleColorBox" style="margin-top:10px;display:none"><div><label>Màu cần đọc</label><select id="ocrColor"><option>K</option><option>M</option><option>C</option><option>Y</option></select></div><div><label>Ngưỡng tin cậy</label><select id="confidence"><option value="55">55%</option><option value="65" selected>65%</option><option value="75">75%</option></select></div></div>
 <div class="row" style="margin-top:12px">
-<button id="readBtn">📷 Đọc ảnh Machine View</button>
+<button id="readBtn">📷 Đọc toàn bộ K/M/C/Y</button>
 <button id="demoBtn" class="secondary">Nạp dữ liệu ảnh mẫu</button>
 <button id="clearBtn" class="danger">Xóa</button>
 </div>
 <img id="preview" class="preview" hidden>
-<div id="ocrStatus" class="status">Chưa đọc ảnh.</div>
+<div id="ocrStatus" class="status">Chưa đọc ảnh. V18.4 không tự biến OCR lỗi thành 0.</div>
+<div id="ocrSummary" class="small" style="margin-top:8px"></div>
 </section>
 
 <section class="card">
 <div class="title">2. Bảng nhận diện • 21 zone</div>
-<div class="small">OCR chỉ là bước nhập liệu. Giá trị cuối cùng luôn do bạn xác nhận.</div>
+<div class="small">OCR là bước nhập liệu tự động. Mỗi ô có thể sửa trực tiếp; chỉ dữ liệu bạn bấm “Dùng dữ liệu đã xác nhận” mới được học vào Machine Profile.</div>
 <div class="tablewrap" style="margin-top:12px">
 <table><thead><tr><th>Zone</th><th>OCR</th><th>Giá trị xác nhận</th></tr></thead><tbody id="ocrTable"></tbody></table>
 </div>
@@ -95,66 +97,88 @@ button{border:0;border-radius:14px;padding:14px 18px;background:var(--accent);co
 </main>
 
 <script>
-const zones=21;
-const colors=["K","M","C","Y"];
+const zones=21, colors=["K","M","C","Y"];
 const data={K:Array(zones).fill(0),M:Array(zones).fill(0),C:Array(zones).fill(0),Y:Array(zones).fill(0)};
 const profile={K:Array(zones).fill(0),M:Array(zones).fill(0),C:Array(zones).fill(0),Y:Array(zones).fill(0)};
 let current="K", imgURL=null;
-
-function renderTable(){
-  const tb=document.getElementById("ocrTable"); tb.innerHTML="";
-  for(let i=0;i<zones;i++){
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${String(i+1).padStart(2,"0")}</td><td id="ocr${i}">0</td><td><input class="confirmed" data-i="${i}" type="number" step="0.1" min="0" max="100" value="${data[current][i]}"></td>`;
-    tb.appendChild(tr);
-  }
-}
-function renderProfile(){
- const tb=document.getElementById("profileTable");tb.innerHTML="";
- for(let i=0;i<zones;i++) tb.insertAdjacentHTML("beforeend",`<tr><td>${String(i+1).padStart(2,"0")}</td><td>${profile.K[i]}</td><td>${profile.M[i]}</td><td>${profile.C[i]}</td><td>${profile.Y[i]}</td></tr>`);
-}
-function syncConfirmed(){
- document.querySelectorAll(".confirmed").forEach(x=>data[current][+x.dataset.i]=Math.max(0,Math.min(100,parseFloat(x.value)||0)));
-}
-function status(t,kind=""){const e=document.getElementById("ocrStatus");e.textContent=t;e.className="status "+kind}
+const $=id=>document.getElementById(id);
+function renderTable(){const tb=$("ocrTable");tb.innerHTML="";for(let i=0;i<zones;i++){const tr=document.createElement("tr");tr.innerHTML=`<td>${String(i+1).padStart(2,"0")}</td><td id="ocr${i}">-</td><td><input class="confirmed" data-i="${i}" type="number" step="0.1" min="0" max="100" value="${Number(data[current][i]).toFixed(1)}"></td>`;tb.appendChild(tr)}}
+function renderProfile(){const tb=$("profileTable");tb.innerHTML="";for(let i=0;i<zones;i++)tb.insertAdjacentHTML("beforeend",`<tr><td>${String(i+1).padStart(2,"0")}</td><td>${profile.K[i]}</td><td>${profile.M[i]}</td><td>${profile.C[i]}</td><td>${profile.Y[i]}</td></tr>`)}
+function syncConfirmed(){document.querySelectorAll(".confirmed").forEach(x=>data[current][+x.dataset.i]=Math.max(0,Math.min(100,parseFloat(x.value)||0)))}
+function status(t,kind=""){$("ocrStatus").textContent=t;$('ocrStatus').className="status "+kind}
 function loadDemo(){
- // Values transcribed from the user's provided machine screenshot, with zone 21 confirmed as 0.
  data.K=[0,0,3.4,3.8,3.6,6.2,6.0,5.2,3.4,1.0,0.6,5.8,5.8,5.8,5.8,5.2,4.6,3.0,0,0,0];
  data.M=[0,0,0,8.8,10.2,11.8,11.4,7.8,3.8,2.8,2.6,11.2,9.8,10.6,10.8,11.8,7.2,4.6,3.2,0,0];
  data.C=[0,0,16.2,18.4,17.8,25.6,25.6,21.0,19.0,14.6,3.0,15.2,13.2,12.8,21.2,20.4,18.4,19.0,7.0,0,0];
  data.Y=[0,0,15.4,21.8,21.6,39.8,39.6,19.2,6.6,4.8,3.4,23.4,28.6,37.4,44.2,36.2,17.8,4.4,1.2,0,0];
- renderTable(); status("Đã nạp bộ dữ liệu mẫu từ ảnh Machine View. Hãy kiểm tra rồi bấm Dùng dữ liệu đã xác nhận.","ok");
+ renderTable();status("Đã nạp dữ liệu mẫu để kiểm tra giao diện. Zone 21 = 0.","ok");
 }
-function applyConfirmed(){
- syncConfirmed(); profileStatus.textContent=`Đã xác nhận ${current} • 21 zone. Có thể chuyển màu và học profile.`;
+function applyConfirmed(){syncConfirmed();renderProfile();$("profileStatus").textContent=`Đã xác nhận ${current} • 21 zone. Có thể chuyển màu hoặc học profile.`}
+function normNum(t){let s=(t||"").trim().replace(/[Oo]/g,"0").replace(/[Il|]/g,"1").replace(/,/g,".");s=s.replace(/[^0-9.]/g,"");if(!s)return null;const n=parseFloat(s);return Number.isFinite(n)&&n>=0&&n<=100?n:null}
+function clusterWords(words){
+ const nums=words.map(w=>({x:(w.bbox.x0+w.bbox.x1)/2,y:(w.bbox.y0+w.bbox.y1)/2,text:w.text,conf:w.confidence,num:normNum(w.text)})).filter(w=>w.num!==null&&w.conf>=0);
+ nums.sort((a,b)=>a.y-b.y);
+ const rows=[];const tol=Math.max(12,Math.min(34, (words.length?Math.abs((words[0].bbox.y1-words[0].bbox.y0))*1.4:18)));
+ for(const w of nums){let r=rows.find(r=>Math.abs(r.y-w.y)<=tol);if(!r){r={y:w.y,items:[]};rows.push(r)}r.items.push(w)}
+ rows.forEach(r=>r.items.sort((a,b)=>a.x-b.x));
+ return rows.filter(r=>r.items.length>=8);
 }
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{syncConfirmed();document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");current=b.dataset.c;renderTable()});
-document.getElementById("demoBtn").onclick=loadDemo;
-document.getElementById("useConfirmed").onclick=applyConfirmed;
-document.getElementById("fillZeros").onclick=()=>{data[current]=Array(zones).fill(0);renderTable();status("Đã đưa 21 zone về 0.")};
-document.getElementById("clearBtn").onclick=()=>{data[current]=Array(zones).fill(0);renderTable();document.getElementById("imgFile").value="";document.getElementById("preview").hidden=true;status("Đã xóa.")};
-document.getElementById("imgFile").onchange=e=>{const f=e.target.files[0];if(!f)return;imgURL=URL.createObjectURL(f);const p=document.getElementById("preview");p.src=imgURL;p.hidden=false;status("Đã tải ảnh. Bấm Đọc ảnh Machine View.")};
-document.getElementById("readBtn").onclick=async()=>{
- const f=document.getElementById("imgFile").files[0]; if(!f){status("Chưa chọn ảnh.","warn");return}
- status("Đang nhận diện bảng Machine View…");
- try{
-   // The browser OCR path is intentionally conservative. If Tesseract is available, OCR text is shown
-   // for manual zone confirmation rather than silently assigning values.
-   if(!window.Tesseract){
-     const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
-     document.head.appendChild(s);await new Promise((res,rej)=>{s.onload=res;s.onerror=rej});
-   }
-   const r=await Tesseract.recognize(f,"eng",{logger:m=>{if(m.progress) status(`OCR ${Math.round(m.progress*100)}%…`)}}); 
-   const txt=r.data.text.replace(/\s+/g," ").trim();
-   status(`OCR đã đọc được văn bản. Không tự ghi đè 21 zone để tránh đọc sai. Hãy đối chiếu bảng và xác nhận.`, "ok");
-   document.getElementById("ocrStatus").title=txt;
- }catch(e){status("OCR không hoàn tất. Bạn vẫn có thể dùng dữ liệu mẫu hoặc nhập/sửa trong bảng.","warn")}
+function chooseFourRows(rows){
+ // Candidate rows containing ~21 numeric cells. Prefer rows with 15-24 items, in vertical order.
+ const cand=rows.filter(r=>r.items.length>=15 && r.items.length<=26);
+ if(cand.length>=4)return cand.sort((a,b)=>a.y-b.y).slice(-4);
+ return rows.sort((a,b)=>a.y-b.y).filter(r=>r.items.length>=10).slice(-4);
+}
+function rowValues(r){
+ let vals=r.items.map(x=>x.num);
+ // If OCR splits one decimal into adjacent integers, do not guess. Keep only first 21 clean tokens.
+ if(vals.length>21) vals=vals.slice(-21);
+ while(vals.length<21) vals.push(null);
+ return vals.slice(0,21);
+}
+async function ensureTesseract(){
+ if(window.Tesseract)return;
+ const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";document.head.appendChild(s);
+ await new Promise((res,rej)=>{s.onload=res;s.onerror=rej});
+}
+async function ocrPass(file,psm=6){
+ const r=await Tesseract.recognize(file,"eng",{logger:m=>{if(m.status&&m.progress)status(`Đang đọc ảnh… ${Math.round(m.progress*100)}%`)},tessedit_pageseg_mode:String(psm),preserve_interword_spaces:"1"});
+ return r.data;
+}
+function paintOCR(result){
+ const rows=chooseFourRows(clusterWords(result.words||[]));
+ const out={}; colors.forEach(c=>out[c]=Array(zones).fill(null));
+ rows.forEach((r,i)=>{if(i<4)out[colors[i]]=rowValues(r)});
+ return {out,rows};
+}
+function setDetected(out){
+ let total=0,good=0;
+ for(const c of colors){for(let i=0;i<zones;i++){if(out[c][i]!==null){data[c][i]=out[c][i];good++;}total++}}
+ current="K";document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.c==='K'));renderTable();
+ $("ocrSummary").textContent=`Đã nhận diện ${good}/${total} ô. Ô chưa chắc chắn giữ dấu “-”, không tự gán 0. Kiểm tra cả 4 màu trước khi xác nhận.`;
+ return good;
+}
+$("ocrMode").onchange=e=>$("singleColorBox").style.display=e.target.value==='single'?'grid':'none';
+$("demoBtn").onclick=loadDemo;
+$("useConfirmed").onclick=applyConfirmed;
+$("fillZeros").onclick=()=>{data[current]=Array(zones).fill(0);renderTable();status(`Đã đưa ${current} về 0.`)};
+$("clearBtn").onclick=()=>{colors.forEach(c=>data[c]=Array(zones).fill(0));renderTable();$("imgFile").value="";$("preview").hidden=true;$("ocrSummary").textContent="";status("Đã xóa dữ liệu OCR.")};
+$("imgFile").onchange=e=>{const f=e.target.files[0];if(!f)return;imgURL=URL.createObjectURL(f);const p=$("preview");p.src=imgURL;p.hidden=false;status("Đã tải ảnh. Bấm “Đọc toàn bộ K/M/C/Y”.")};
+$("readBtn").onclick=async()=>{
+ const f=$("imgFile").files[0];if(!f){status("Chưa chọn ảnh.","warn");return}
+ try{await ensureTesseract();status("Đang chuẩn bị OCR…");
+   let result=await ocrPass(f,6);let parsed=paintOCR(result);let good=setDetected(parsed.out);
+   if(good<55){status("OCR lần 1 chưa đủ chắc. Đang đọc lại bằng chế độ khác…","warn");result=await ocrPass(f,11);parsed=paintOCR(result);good=setDetected(parsed.out)}
+   if(good>=55)status(`Đã đọc được ${good}/84 ô. Hãy kiểm tra bảng và sửa ô nào sai, sau đó bấm “Dùng dữ liệu đã xác nhận”.`,"ok");
+   else status(`OCR chỉ nhận được ${good}/84 ô. Không tự điền số 0. Hãy dùng ảnh rõ hơn hoặc sửa các ô còn thiếu.`,`warn`);
+ }catch(e){console.error(e);status("OCR không hoàn tất. Không có dữ liệu nào bị tự biến thành 0. Bạn có thể dùng dữ liệu mẫu hoặc sửa bảng.","warn")}
 };
-["fK","fM","fC","fY"].forEach(id=>document.getElementById(id).oninput=e=>document.getElementById("fv"+id.slice(1)).textContent=e.target.value);
-document.getElementById("learnBtn").onclick=()=>{syncConfirmed();for(const c of colors)profile[c]=data[c].slice();renderProfile();document.getElementById("profileStatus").textContent="Đã học Machine Profile từ dữ liệu Ink Key thực tế đã xác nhận.";};
-document.getElementById("saveBtn").onclick=()=>{syncConfirmed();localStorage.setItem("inkzone-v18-machine-profile",JSON.stringify({profile,data,fountain:{K:+fK.value,M:+fM.value,C:+fC.value,Y:+fY.value}}));document.getElementById("profileStatus").textContent="Đã lưu Machine Profile trên thiết bị."};
-document.getElementById("loadBtn").onclick=()=>{const x=localStorage.getItem("inkzone-v18-machine-profile");if(!x){document.getElementById("profileStatus").textContent="Chưa có profile đã lưu.";return}const o=JSON.parse(x);Object.assign(data,o.data);Object.assign(profile,o.profile);fK.value=o.fountain.K;fM.value=o.fountain.M;fC.value=o.fountain.C;fY.value=o.fountain.Y;renderTable();renderProfile();document.getElementById("profileStatus").textContent="Đã nạp Machine Profile."};
-document.getElementById("fullBtn").onclick=()=>{const p=document.getElementById("preview");if(p.hidden){alert("Hãy chọn ảnh artwork/ảnh máy trước.");return}if(p.requestFullscreen)p.requestFullscreen();else if(p.webkitEnterFullscreen)p.webkitEnterFullscreen()};
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{syncConfirmed();document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");current=b.dataset.c;renderTable()});
+["fK","fM","fC","fY"].forEach(id=>$(id).oninput=e=>$('fv'+id.slice(1)).textContent=e.target.value);
+$("learnBtn").onclick=()=>{syncConfirmed();for(const c of colors)profile[c]=data[c].slice();renderProfile();$("profileStatus").textContent="Đã học Machine Profile từ dữ liệu Ink Key thực tế đã xác nhận."};
+$("saveBtn").onclick=()=>{syncConfirmed();localStorage.setItem("inkzone-v18-machine-profile",JSON.stringify({profile,data,fountain:{K:+fK.value,M:+fM.value,C:+fC.value,Y:+fY.value}}));$("profileStatus").textContent="Đã lưu Machine Profile trên thiết bị."};
+$("loadBtn").onclick=()=>{const x=localStorage.getItem("inkzone-v18-machine-profile");if(!x){$("profileStatus").textContent="Chưa có profile đã lưu.";return}const o=JSON.parse(x);Object.assign(data,o.data);Object.assign(profile,o.profile);fK.value=o.fountain.K;fM.value=o.fountain.M;fC.value=o.fountain.C;fY.value=o.fountain.Y;renderTable();renderProfile();$("profileStatus").textContent="Đã nạp Machine Profile."};
+$("fullBtn").onclick=()=>{const p=$("preview");if(p.hidden){alert("Hãy chọn ảnh trước.");return}if(p.requestFullscreen)p.requestFullscreen();else if(p.webkitEnterFullscreen)p.webkitEnterFullscreen()};
 renderTable();renderProfile();
 </script>
 </body>
