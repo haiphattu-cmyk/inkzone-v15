@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.4.1</title>
+<title>InkZone V15.4.2</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -31,7 +31,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.4.1</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • KMCY • Ink Fountain • Correction • Coverage → Ink Key</div></header>
+<header><h1>InkZone V15.4.2</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • KMCY • Ink Fountain • Correction • Coverage → Ink Key</div></header>
 <main>
 
 <section class="card">
@@ -171,6 +171,7 @@ function interp(x,color){
  return clamp(x);
 }
 function line(a,b,x){return b.x===a.x?b.y:a.y+(x-a.x)*(b.y-a.y)/(b.x-a.x)}
+window.coverageToInkKey=interp;
 
 function rgbToCmyk(r,g,b){
  r/=255;g/=255;b/=255;const k=1-Math.max(r,g,b);
@@ -308,7 +309,7 @@ function drawBars(){
 }
 
 $("saveProfile").onclick=()=>{
- const o={version:"V15.4",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
+ const o={version:"V15.4.2",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
  localStorage.setItem("inkzone_profile",JSON.stringify(o));$("calStatus").textContent="Đã lưu profile trên điện thoại.";
 };
 $("loadProfile").onclick=()=>{
@@ -323,7 +324,7 @@ $("export").onclick=()=>{
  const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.k.toFixed(2),r.kf.toFixed(2),r.kk.toFixed(2),
  r.m.toFixed(2),r.mf.toFixed(2),r.mk.toFixed(2),r.c.toFixed(2),r.cf.toFixed(2),r.ck.toFixed(2),
  r.y.toFixed(2),r.yf.toFixed(2),r.yk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""] .join(",")));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_4_KMCY_21Zone.csv";a.click();
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_4_2_KMCY_21Zone.csv";a.click();
 };
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
@@ -421,7 +422,7 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
    }
    if(e.target.id==="saveFountain"){
      fpRead();
-     const payload={version:"V15.4",name:document.querySelector("#fpName").value||"Default",base:+document.querySelector("#fBase").value||0,curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
+     const payload={version:"V15.4.2",name:document.querySelector("#fpName").value||"Default",base:+document.querySelector("#fBase").value||0,curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
      localStorage.setItem("inkzone_fountain_v15_3",JSON.stringify(payload));
      const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã lưu Fountain Profile.";
    }
@@ -453,7 +454,7 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
        const corrected=window.getCorrectionValue?window.getCorrectionValue(c,cov):cov;
        const fountain=+getFountain(c,corrected).toFixed(1);
        r[c.toLowerCase()+"f"]=fountain;
-       r[c.toLowerCase()+"k"]=+interp(fountain,c).toFixed(1);
+       r[c.toLowerCase()+"k"]=+window.coverageToInkKey(fountain,c).toFixed(1);
      });
      return r;
    });
