@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.4.2</title>
+<title>InkZone V15.5</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -28,10 +28,45 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 .preview{width:100%;max-height:360px;object-fit:contain;background:#eef1f4;border-radius:10px;margin-top:10px;display:none}
 .badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef2f7;font-size:11px}
 @media(min-width:720px){.grid,.calgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.machine-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.machine-toolbar .mcolor{min-width:58px;padding:9px 12px;border-radius:9px;background:#e9edf2;color:var(--text)}
+.machine-toolbar .mcolor.active{background:var(--dark);color:#fff}
+.machine-view{border:1px solid #aeb7c4;border-radius:12px;background:#e8ebef;overflow:hidden}
+.machine-head{display:grid;grid-template-columns:46px repeat(7,minmax(58px,1fr));gap:1px;background:#b8c0cb;min-width:460px}
+.machine-head div{background:#dfe4ea;text-align:center;font-weight:750;font-size:12px;padding:8px 3px}
+.machine-head .mh-title{background:#cbd2db}
+.machine-row{display:grid;grid-template-columns:46px repeat(7,minmax(58px,1fr));gap:1px;background:#b8c0cb;min-width:460px}
+.machine-row>div{background:#f8fafc;min-height:118px;text-align:center;padding:7px 3px}
+.machine-row .m-label{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background:#dfe4ea}
+.key-cell{display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:104px;gap:4px}
+.key-zone{font-size:11px;font-weight:800;color:#475467}
+.key-track{height:58px;width:15px;border:1px solid #7c8796;border-radius:7px;background:#d6dbe1;display:flex;align-items:flex-end;overflow:hidden;box-shadow:inset 0 1px 2px #0002}
+.key-fill{width:100%;background:#111827;min-height:0}
+.key-val{font-size:13px;font-weight:850;color:#111827}
+.key-adjust{display:flex;gap:2px}
+.key-adjust button{padding:2px 5px;min-width:25px;font-size:12px;border-radius:6px;background:#eef2f6;color:#111827}
+.machine-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.machine-note{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+.machine-page{font-weight:750;color:#344054}
+.machine-nav{display:flex;gap:8px;margin-top:9px}
+.machine-nav button{flex:1}
+.machine-nav button:disabled{opacity:.45}
+.machine-landscape{display:none}
+@media (orientation:landscape) and (max-width:900px){
+ .machine-head,.machine-row{grid-template-columns:52px repeat(21,minmax(34px,1fr));min-width:820px}
+ .machine-row>div{min-height:150px;padding:5px 2px}
+ .key-cell{height:136px}.key-track{height:83px;width:13px}.key-val{font-size:12px}.key-zone{font-size:10px}
+ .machine-nav{display:none}
+}
+@media(min-width:900px){
+ .machine-head,.machine-row{grid-template-columns:55px repeat(21,minmax(34px,1fr));min-width:0}
+ .machine-row>div{min-height:145px}.key-cell{height:130px}.key-track{height:78px;width:14px}.machine-nav{display:none}
+}
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.4.2</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • KMCY • Ink Fountain • Correction • Coverage → Ink Key</div></header>
+<header><h1>InkZone V15.5</h1><div class="sub">Machine View • PDF/JPEG • 21 Ink Key • KMCY • Coverage → Correction → Fountain → Ink Key</div></header>
 <main>
 
 <section class="card">
@@ -122,10 +157,27 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <div id="status" class="status" style="margin-top:10px">Chưa phân tích.</div>
 </section>
 
-<section class="card">
-<div class="title">7. Ink Key theo 21 zone</div>
+<section class="card" id="machineViewCard">
+<div class="title">7. MACHINE VIEW • 21 INK KEY</div>
 <div id="summary" class="small">Chưa có dữ liệu.</div>
-<div class="tablewrap" style="margin-top:10px">
+<div class="machine-toolbar" aria-label="Chọn màu">
+<button class="mcolor active" data-color="K">K</button>
+<button class="mcolor" data-color="M">M</button>
+<button class="mcolor" data-color="C">C</button>
+<button class="mcolor" data-color="Y">Y</button>
+<span class="badge">21 Ink Key</span><span class="badge" id="machinePageLabel">01–07</span>
+</div>
+<div class="machine-scroll">
+<div id="machineHead" class="machine-head"></div>
+<div id="machineRows" class="machine-row"></div>
+</div>
+<div class="machine-nav"><button id="machinePrev" class="secondary">← 01–07</button><button id="machineNext" class="secondary">08–14 →</button></div>
+<div class="machine-note"><span class="small">Giá trị hiển thị là Ink Key preset. Zone 01 → 21 trùng trực tiếp với Ink Key trên máy.</span><span class="small" id="machineColorNote">Màu K • 21 key</span></div>
+</section>
+
+<section class="card">
+<div class="title">8. Dữ liệu chi tiết</div>
+<div class="tablewrap">
 <table id="tbl"><thead><tr>
 <th>Zone</th><th>X mm</th><th>K cov%</th><th>K Fountain</th><th>K key</th><th>M cov%</th><th>M Fountain</th><th>M key</th><th>C cov%</th><th>C Fountain</th><th>C key</th><th>Y cov%</th><th>Y Fountain</th><th>Y key</th><th>TIL%</th><th>TAC</>
 </tr></thead><tbody></tbody></table>
@@ -133,8 +185,8 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </section>
 
 <section class="card">
-<div class="title">8. Biểu đồ Ink Key</div><div id="bars"></div>
-<div class="small" style="margin-top:9px">Các giá trị Ink Key là preset đề xuất dựa trên profile của máy, không phải tỷ lệ mở cơ khí tuyệt đối.</div>
+<div class="title">9. Kiểm tra nhanh Ink Key</div><div id="bars"></div>
+<div class="small" style="margin-top:9px">Dùng bảng này để kiểm tra toàn bộ 21 zone. Machine View phía trên là giao diện ưu tiên khi đứng trước máy.</div>
 </section>
 </main>
 
@@ -308,8 +360,69 @@ function drawBars(){
  });
 }
 
+let machineColor="K", machinePage=0;
+const machinePageSize=7;
+function machineRange(){
+ const n=rows.length||21;
+ if(window.matchMedia && window.matchMedia("(orientation: landscape)").matches) return {start:0,end:n};
+ const start=machinePage*machinePageSize;
+ return {start,end:Math.min(start+machinePageSize,n)};
+}
+function renderMachineView(){
+ const head=$("machineHead"), body=$("machineRows"); if(!head||!body)return;
+ const range=machineRange();
+ head.innerHTML="";body.innerHTML="";
+ const title=document.createElement("div");title.className="mh-title";title.textContent=machineColor;head.appendChild(title);
+ for(let i=range.start;i<range.end;i++){const d=document.createElement("div");d.textContent=String(i+1).padStart(2,"0");head.appendChild(d)}
+ const lab=document.createElement("div");lab.className="m-label";lab.textContent=machineColor;body.appendChild(lab);
+ for(let i=range.start;i<range.end;i++){
+   const r=rows[i]||{}; const v=clamp(+r[machineColor.toLowerCase()+"k"]||0);
+   const cell=document.createElement("div");
+   cell.innerHTML=`<div class="key-cell"><div class="key-zone">${String(i+1).padStart(2,"0")}</div><div class="key-track"><i class="key-fill" style="height:${v}%"></i></div><div class="key-val">${v.toFixed(1)}</div><div class="key-adjust"><button type="button" data-adjust="-1" data-zone="${i}">−</button><button type="button" data-adjust="1" data-zone="${i}">+</button></div></div>`;
+   body.appendChild(cell);
+ }
+ const pageLabel=$("machinePageLabel"), note=$("machineColorNote");
+ if(pageLabel){pageLabel.textContent=range.start===0&&range.end===(rows.length||21)?`01–${String(range.end).padStart(2,"0")}`:`${String(range.start+1).padStart(2,"0")}–${String(range.end).padStart(2,"0")}`;}
+ if(note)note.textContent=`Màu ${machineColor} • ${rows.length||0} key`;
+ const prev=$("machinePrev"),next=$("machineNext");
+ if(prev&&next){
+   const maxPage=Math.max(0,Math.ceil((rows.length||21)/machinePageSize)-1);
+   prev.disabled=machinePage<=0;next.disabled=machinePage>=maxPage;
+   prev.textContent=machinePage<=0?"← 01–07":`← ${String(machinePage*7-6).padStart(2,"0")}–${String(machinePage*7).padStart(2,"0")}`;
+   const ns=Math.min((machinePage+1)*7+1,rows.length||21), ne=Math.min((machinePage+2)*7,rows.length||21);
+   next.textContent=machinePage>=maxPage?"15–21 →":` ${String(ns).padStart(2,"0")}–${String(ne).padStart(2,"0")} →`;
+ }
+}
+
+document.addEventListener("click",e=>{
+ const c=e.target.closest(".mcolor");
+ if(c){document.querySelectorAll(".mcolor").forEach(x=>x.classList.remove("active"));c.classList.add("active");machineColor=c.dataset.color;machinePage=0;renderMachineView();}
+ if(e.target.id==="machinePrev"){machinePage=Math.max(0,machinePage-1);renderMachineView();}
+ if(e.target.id==="machineNext"){machinePage++;renderMachineView();}
+ const adj=e.target.closest("[data-adjust]");
+ if(adj && rows.length){
+   const i=+adj.dataset.zone, key=machineColor.toLowerCase()+"k", delta=+adj.dataset.adjust||0;
+   rows[i][key]=clamp((+rows[i][key]||0)+delta);
+   render();
+ }
+});
+
+window.addEventListener("resize",()=>renderMachineView());
+
+function render(){
+ const tb=$("tbl").querySelector("tbody");tb.innerHTML="";
+ rows.forEach((r,i)=>{
+  const tr=document.createElement("tr");
+  [i+1,r.x.toFixed(1),r.k.toFixed(1),r.kf.toFixed(1),r.kk.toFixed(1),
+   r.m.toFixed(1),r.mf.toFixed(1),r.mk.toFixed(1),r.c.toFixed(1),r.cf.toFixed(1),r.ck.toFixed(1),
+   r.y.toFixed(1),r.yf.toFixed(1),r.yk.toFixed(1),r.til.toFixed(1),r.warn?"⚠":"OK"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+  tb.appendChild(tr);
+ });
+ drawBars();renderMachineView();
+}
+
 $("saveProfile").onclick=()=>{
- const o={version:"V15.4.2",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
+ const o={version:"V15.5",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
  localStorage.setItem("inkzone_profile",JSON.stringify(o));$("calStatus").textContent="Đã lưu profile trên điện thoại.";
 };
 $("loadProfile").onclick=()=>{
@@ -324,7 +437,7 @@ $("export").onclick=()=>{
  const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.k.toFixed(2),r.kf.toFixed(2),r.kk.toFixed(2),
  r.m.toFixed(2),r.mf.toFixed(2),r.mk.toFixed(2),r.c.toFixed(2),r.cf.toFixed(2),r.ck.toFixed(2),
  r.y.toFixed(2),r.yf.toFixed(2),r.yk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""] .join(",")));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_4_2_KMCY_21Zone.csv";a.click();
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_5_MachineView_KMCY_21InkKey.csv";a.click();
 };
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
@@ -422,7 +535,7 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
    }
    if(e.target.id==="saveFountain"){
      fpRead();
-     const payload={version:"V15.4.2",name:document.querySelector("#fpName").value||"Default",base:+document.querySelector("#fBase").value||0,curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
+     const payload={version:"V15.5",name:document.querySelector("#fpName").value||"Default",base:+document.querySelector("#fBase").value||0,curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null};
      localStorage.setItem("inkzone_fountain_v15_3",JSON.stringify(payload));
      const s=document.querySelector("#fountainStatus");s.className="status good";s.textContent="Đã lưu Fountain Profile.";
    }
