@@ -1,1 +1,8 @@
-{"name":"InkZone V18","short_name":"InkZone V18","start_url":"./?v=18","display":"standalone","background_color":"#f3f5f7","theme_color":"#111827","icons":[]}
+{
+  "name": "InkZone V18",
+  "short_name": "InkZone V18",
+  "start_url": "./?v=1800",
+  "display": "standalone",
+  "background_color": "#fff",
+  "theme_color": "#111827"
+}

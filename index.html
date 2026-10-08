@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V18</title>
+<title>InkZone V18.2</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -69,13 +69,6 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
  .machine-row>div{min-height:145px}.key-cell{height:130px}.key-track{height:78px;width:14px}.machine-nav{display:none}
 }
 
-/* V18 Machine Profile */
-#machineProfileCard input{font-size:13px}
-#machineProfileCard .status{font-weight:650}
-/* V18 edge-to-edge artwork overlay */
-.v17-overlay{background:#05080f!important}
-.v17-stage{background:#05080f!important}
-.v17-overlay canvas{background:#05080f}
 /* V16.1 Artwork View */
 .v16-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 .v16-toolbar button,.v16-modal-foot button{border:0;border-radius:12px;padding:10px 13px;font-weight:800;background:#111827;color:#fff}
@@ -108,32 +101,22 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 }
 
 </style>
-<style id="v17-overlay-css">
-.v17-overlay{position:fixed;inset:0;z-index:9999;background:#fff;display:none;overflow:hidden}
-.v17-overlay.open{display:block}
-.v17-stage{position:absolute;inset:0;background:#fff;overflow:hidden;touch-action:none}
-#v17Canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.v17-head{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;background:linear-gradient(#111827f2,#111827c9,#11182700);color:#fff}
-.v17-head strong{font-size:16px;white-space:nowrap}.v17-head .spacer{flex:1}
-.v17-head button,.v17-foot button{border:0;border-radius:10px;padding:9px 11px;background:#eef2f7;color:#111827;font-weight:800}
-.v17-foot{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(#11182700,#111827eF);display:flex;gap:6px;align-items:center}
-.v17-color{display:flex;gap:5px}.v17-color button{min-width:42px}.v17-color button.active{background:#111827;color:#fff}
-.v17-opacity{width:75px}.v17-sheet{padding:9px 11px}
-.v17-panel{position:absolute;left:10px;right:10px;bottom:70px;z-index:6;background:#fffffff2;backdrop-filter:blur(12px);border:1px solid #cbd5e1;border-radius:16px;padding:12px;box-shadow:0 10px 35px #0003;display:none}
-.v17-panel.open{display:block}
-.v17-panel-top{display:flex;align-items:center;gap:8px}.v17-panel-top strong{font-size:18px}.v17-panel-top span{margin-left:auto;font-size:24px;font-weight:850}
-.v17-slider{width:100%;accent-color:#111827}
-.v17-adj{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-top:8px}
-.v17-adj button{padding:10px;border:0;border-radius:10px;background:#e8edf3;font-weight:800}
-.v17-adj button.main{background:#111827;color:#fff}
-.v17-help{font-size:11px;color:#64748b;margin-top:7px}
-.v17-big{font-size:12px}
-@media(orientation:landscape){.v17-panel{left:auto;width:330px;right:12px;bottom:65px}.v17-foot{justify-content:center}}
-</style>
-
-</head>
+<style>
+.v18-grid{display:grid;grid-template-columns:1fr 120px;gap:10px;align-items:end}
+.v18-grid label,.v18-fountain-grid label{display:flex;flex-direction:column;gap:5px;font-weight:800}
+.v18-grid input,.v18-grid select,.v18-fountain-grid input,.v18-table input{font:inherit;border:1px solid #cbd5e1;border-radius:10px;padding:9px;box-sizing:border-box}
+.v18-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.v18-actions button{border:0;border-radius:11px;padding:10px 13px;background:#111827;color:#fff;font-weight:800}
+.v18-actions button.secondary{background:#e8edf3;color:#111827}
+.v18-preview-wrap{background:#f8fafc;border-radius:14px;padding:10px;min-height:90px}
+#v18ShotPreview{display:none;max-width:100%;max-height:55vh;object-fit:contain;border-radius:10px;background:#fff}
+.v18-table-wrap{overflow:auto;margin-top:10px}.v18-table{width:100%;border-collapse:collapse;min-width:360px}
+.v18-table th,.v18-table td{border-bottom:1px solid #e2e8f0;padding:7px;text-align:center}.v18-table input{width:88px;text-align:center}
+.v18-fountain-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+@media(max-width:600px){.v18-grid{grid-template-columns:1fr}.v18-fountain-grid{grid-template-columns:repeat(2,1fr)}}
+</style></head>
 <body>
-<header><h1>InkZone V17</h1><div class="sub">Machine View • Artwork Fullscreen • Ink Key Overlay • KMCY • Ink Fountain • Calibration • Large File Mode</div></header>
+<header><h1>InkZone V18.1</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Ink Fountain • Calibration • Edge-to-edge</div></header>
 <main>
 
 <section class="card">
@@ -221,31 +204,8 @@ Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23
 <div id="fountainStatus" class="small" style="margin-top:8px">Chưa có Fountain profile.</div>
 </section>
 
-<section class="card" id="machineProfileCard">
-<div class="title">5. MACHINE PROFILE • HỌC TỪ BÀI IN THỰC TẾ</div>
-<div class="small">V18 không ép Coverage = Ink Key. Bạn nhập bộ Ink Key thực tế của một bài đã chạy đạt màu. App sẽ so sánh với kết quả phân tích hiện tại và tạo profile riêng cho máy. Mặc định dùng <b>Zone Bias</b>: giữ hình ảnh/coverage của bài mới nhưng bù sai lệch theo từng zone của máy.</div>
-<div class="row" style="margin-top:10px">
-<button id="learnFromActual">Học từ Ink Key thực tế</button>
-<button id="clearMachineProfile" class="secondary">Xóa profile học</button>
-<button id="toggleLearnMode" class="secondary">Chế độ: Zone Bias</button>
-</div>
-<div id="machineProfileStatus" class="status" style="margin-top:10px">Chưa có Machine Profile. Hãy phân tích một bài trước, sau đó nhập Ink Key thực tế bên dưới.</div>
-<div class="grid" style="margin-top:10px">
-<div><label>Màu K • 21 giá trị, cách nhau bằng dấu phẩy</label><input id="actualK" type="text" placeholder="0,6,15,19,...,0"></div>
-<div><label>Màu M • 21 giá trị</label><input id="actualM" type="text" placeholder="0,12,12,...,0"></div>
-<div><label>Màu C • 21 giá trị</label><input id="actualC" type="text" placeholder="0,15,15,16,...,0"></div>
-<div><label>Màu Y • 21 giá trị</label><input id="actualY" type="text" placeholder="0,0,23,24,...,0"></div>
-</div>
-<div class="row" style="margin-top:10px">
-<button id="fillFromCurrent">Điền từ Ink Key hiện tại</button>
-<button id="saveMachineProfile" class="secondary">Lưu Machine Profile</button>
-<button id="loadMachineProfile" class="secondary">Nạp Machine Profile</button>
-</div>
-<div class="small" style="margin-top:8px">Zone 21 có thể bằng 0 khi không có hình. V18 giữ nguyên 0 ngoài artwork, không tự “kéo” mực vào vùng trắng.</div>
-</section>
-
 <section class="card" id="correctionCard">
-<div class="title">6. Correction Curve</div>
+<div class="title">5. Correction Curve</div>
 <div class="small">Hiệu chỉnh riêng từng màu trước khi tính Fountain. Ví dụ 50% Coverage → 35% demand nếu dữ liệu thực tế của máy cho thấy như vậy.</div>
 <div class="tabs" style="margin-top:10px">
 <button class="ctab active" data-color="K">K</button>
@@ -263,7 +223,7 @@ Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23
 </section>
 
 <section class="card">
-<div class="title">7. Phân tích</div>
+<div class="title">6. Phân tích</div>
 <div class="row"><button id="analyze">Phân tích artwork</button><button id="export" class="secondary" disabled>Xuất CSV</button></div>
 <div id="status" class="status" style="margin-top:10px">Chưa phân tích.</div>
 </section>
@@ -302,7 +262,7 @@ Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23
   </div>
 </div>
 <section class="card" id="machineViewCard">
-<div class="title">8. MACHINE VIEW • 21 INK KEY</div>
+<div class="title">7. MACHINE VIEW • 21 INK KEY</div>
 <div id="summary" class="small">Chưa có dữ liệu.</div>
 <div class="machine-toolbar" aria-label="Chọn màu">
 <button class="mcolor active" data-color="K">K</button>
@@ -320,7 +280,7 @@ Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23
 </section>
 
 <section class="card">
-<div class="title">9. Dữ liệu chi tiết</div>
+<div class="title">8. Dữ liệu chi tiết</div>
 <div class="tablewrap">
 <table id="tbl"><thead><tr>
 <th>Zone</th><th>X mm</th><th>K cov%</th><th>K Fountain</th><th>K key</th><th>M cov%</th><th>M Fountain</th><th>M key</th><th>C cov%</th><th>C Fountain</th><th>C key</th><th>Y cov%</th><th>Y Fountain</th><th>Y key</th><th>TIL%</th><th>TAC</>
@@ -329,47 +289,17 @@ Fountain chuẩn máy: K 6 • M 12 • C 15 • Y 23
 </section>
 
 <section class="card">
-<div class="title">10. Kiểm tra nhanh Ink Key</div><div id="bars"></div>
+<div class="title">9. Kiểm tra nhanh Ink Key</div><div id="bars"></div>
 <div class="small" style="margin-top:9px">Dùng bảng này để kiểm tra toàn bộ 21 zone. Machine View phía trên là giao diện ưu tiên khi đứng trước máy.</div>
 </section>
 </main>
-
-<div class="v17-overlay" id="v17Overlay" aria-hidden="true">
-  <div class="v17-stage" id="v17Stage">
-    <canvas id="v17Canvas"></canvas>
-  </div>
-  <div class="v17-head">
-    <strong>INK KEY OVERLAY</strong>
-    <span id="v17Mode" class="v17-big">K • 21 zone</span>
-    <div class="spacer"></div>
-    <button id="v17Fit">FIT</button>
-    <button id="v17Close">Đóng</button>
-  </div>
-  <div class="v17-panel" id="v17Panel">
-    <div class="v17-panel-top"><strong id="v17Zone">Zone 01</strong><span id="v17Value">0</span></div>
-    <input class="v17-slider" id="v17Slider" type="range" min="0" max="100" step="0.1" value="0">
-    <div class="v17-adj">
-      <button data-d="-5">−5</button><button data-d="-1">−1</button>
-      <button class="main" data-d="1">+1</button><button class="main" data-d="5">+5</button>
-    </div>
-    <div class="v17-help">Chạm trực tiếp vào vùng trên ảnh để chọn zone. Thay đổi ở đây sẽ cập nhật Machine View, bảng và CSV.</div>
-  </div>
-  <div class="v17-foot">
-    <div class="v17-color">
-      <button class="active" data-c="K">K</button><button data-c="M">M</button><button data-c="C">C</button><button data-c="Y">Y</button>
-    </div>
-    <button id="v17Sheet" class="v17-sheet">SHEET</button>
-    <button id="v17Zones" class="v17-sheet">21 ZONE</button>
-    <label style="color:#fff;font-size:11px">Ảnh <input id="v17Opacity" class="v17-opacity" type="range" min="0.35" max="1" step="0.05" value="1"></label>
-  </div>
-</div>
 
 <script type="module">
 import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.mjs";
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.mjs";
 
 const $=id=>document.getElementById(id);
-let file=null, rows=[]; window.getInkRows=()=>rows;
+let file=null, rows=[];
 const defaultCal=Array.from({length:10},(_,i)=>({cov:(i+1)*10,C:(i+1)*10,M:(i+1)*10,Y:(i+1)*10,K:(i+1)*10}));
 
 function clamp(v){return Math.max(0,Math.min(100,v))}
@@ -406,27 +336,8 @@ function rgbToCmyk(r,g,b){
 }
 
 async function renderPdf(file){
- // V18 uses a File-backed range transport for large PDFs. This avoids making
- // an extra full ArrayBuffer copy in Safari RAM. PDF.js requests only the
- // byte ranges it needs for the selected page.
- let loadingTask;
- try{
-   const RangeTransport=pdfjsLib.PDFDataRangeTransport;
-   if(RangeTransport){
-     const rt=new RangeTransport(file.size,null,false,file.size);
-     rt.requestDataRange=function(begin,end){
-       file.slice(begin,end).arrayBuffer().then(buf=>this.onDataRange(begin,new Uint8Array(buf))).catch(err=>this.onError?.(err));
-     };
-     loadingTask=pdfjsLib.getDocument({range:rt,length:file.size,disableAutoFetch:true,disableStream:true});
-   }else{
-     const url=URL.createObjectURL(file);
-     loadingTask=pdfjsLib.getDocument({url,disableAutoFetch:false,disableStream:false});
-   }
- }catch(_){
-   const url=URL.createObjectURL(file);
-   loadingTask=pdfjsLib.getDocument({url,disableAutoFetch:false,disableStream:false});
- }
- const pdf=await loadingTask.promise;
+ const buf=await file.arrayBuffer();
+ const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
  const pageNo=Math.max(1,Math.min(+$("pageNo").value||1,pdf.numPages));
  $("pageNo").value=pageNo;
  const page=await pdf.getPage(pageNo);
@@ -453,14 +364,13 @@ async function renderPdf(file){
  $("boxInfo").className="status good";
  $("boxInfo").textContent=`PDF trang ${pageNo}/${pdf.numPages} • CropBox/visible ${aw.toFixed(2)}×${ah.toFixed(2)} mm${mediaTxt}`;
 
- const targetW=file.size>250*1024*1024?850:(file.size>120*1024*1024?1050:(file.size>60*1024*1024?1350:1800));
- const scale=Math.min(2.0,targetW/vw);
+ const targetW=1800, scale=Math.min(3,targetW/vw);
  const vp=page.getViewport({scale});
  const canvas=$("preview");canvas.width=Math.round(vp.width);canvas.height=Math.round(vp.height);
  const ctx=canvas.getContext("2d",{willReadFrequently:true});
  await page.render({canvasContext:ctx,viewport:vp}).promise;
  canvas.style.display="block";
- $("fileInfo").textContent=`PDF • ${pdf.numPages} trang • trang ${pageNo} • render tối ưu RAM • CropBox`;
+ $("fileInfo").textContent=`PDF • ${pdf.numPages} trang • đang phân tích trang ${pageNo} • vùng render: CropBox`;
  return {canvas,aw:+$("aw").value,ah:+$("ah").value,pageNo,cropW:aw,cropH:ah,mediaW,mediaH};
 }
 
@@ -481,9 +391,6 @@ $("file").addEventListener("change",async e=>{
  file=e.target.files[0];rows=[];$("export").disabled=true;$("preview").style.display="none";
  if(!file)return;
  try{
-  const mb=file.size/1048576;
-  $("fileInfo").textContent=(mb>80?`File ${mb.toFixed(1)} MB • Large File: giảm độ phân giải preview để tiết kiệm RAM. ${mb>250?"File rất lớn: có thể cần máy tính nếu Safari thiếu RAM.":""}`:`File ${mb.toFixed(1)} MB • chế độ tiêu chuẩn.`);
-
   if(file.type==="application/pdf") await renderPdf(file); else await renderJpeg(file);
   $("status").className="status good";$("status").textContent="Đã đọc file. Nhấn “Phân tích artwork”.";
  }catch(err){$("status").className="status warn";$("status").textContent="Không đọc được file: "+err.message}
@@ -516,7 +423,7 @@ $("analyze").onclick=async()=>{
  if(aw>sw && $("sizeMode").value==="pdf"){$("status").className="status warn";$("status").textContent="Artwork rộng hơn khổ máy. Kiểm tra CropBox hoặc chọn Nhập tay.";return}
  const oxRaw=$("ox").value,oyRaw=$("oy").value;
  const ox=(oxRaw==="auto"||oxRaw==="")?(sw-aw)/2:+oxRaw;
- $("status").className="status";$("status").textContent=file.size>80*1024*1024?"Đang tính 21 zone ở chế độ Large File...":"Đang tính 21 zone...";
+ $("status").className="status";$("status").textContent="Đang tính 21 zone...";
  try{
   let info;
   if(file.type==="application/pdf"){
@@ -532,7 +439,6 @@ $("analyze").onclick=async()=>{
   ck:interp(v.c,"C"),mk:interp(v.m,"M"),yk:interp(v.y,"Y"),kk:interp(v.k,"K"),
   cf:0,mf:0,yf:0,kf:0,til:v.c+v.m+v.y+v.k,warn:v.c+v.m+v.y+v.k>tac}));
   if(window.applyFountainToRows) rows=window.applyFountainToRows(rows);
-  if(window.applyMachineProfileToRows) rows=window.applyMachineProfileToRows(rows);
   $("summary").textContent=`Khổ máy ${sw}×${$("sh").value} mm • ${n} zone • zone ${(sw/n).toFixed(2)} mm • artwork ${aw.toFixed(2)}×${ah.toFixed(2)} mm • X=${ox.toFixed(2)} mm • ${$("sizeMode").value==="pdf"?"PDF/CropBox":"nhập tay"}`;
   $("status").className="status good";$("status").textContent="Hoàn tất. Coverage → Correction → Ink Fountain → Ink Key.";
   render();$("export").disabled=false;
@@ -607,10 +513,9 @@ function render(){
  });
  drawBars();renderMachineView();
 }
-window.refreshInkUI=()=>render();
 
 $("saveProfile").onclick=()=>{
- const o={version:"V18",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
+ const o={version:"V15.5",machine:{W:+$("sw").value,H:+$("sh").value,zones:+$("zones").value,TAC:+$("tac").value},calibration:getCal(),savedAt:new Date().toISOString()};
  localStorage.setItem("inkzone_profile",JSON.stringify(o));$("calStatus").textContent="Đã lưu profile trên điện thoại.";
 };
 $("loadProfile").onclick=()=>{
@@ -625,72 +530,11 @@ $("export").onclick=()=>{
  const lines=[h.join(",")];rows.forEach((r,i)=>lines.push([i+1,r.x.toFixed(2),r.k.toFixed(2),r.kf.toFixed(2),r.kk.toFixed(2),
  r.m.toFixed(2),r.mf.toFixed(2),r.mk.toFixed(2),r.c.toFixed(2),r.cf.toFixed(2),r.ck.toFixed(2),
  r.y.toFixed(2),r.yf.toFixed(2),r.yk.toFixed(2),r.til.toFixed(2),r.warn?"YES":""] .join(",")));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V18_MachineView_KMCY_21InkKey.csv";a.click();
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="InkZone_V15_5_MachineView_KMCY_21InkKey.csv";a.click();
 };
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
 
-
-<script>
-(function(){
- const colors=["K","M","C","Y"];
- let mode="zone";
- let profile=JSON.parse(localStorage.getItem("inkzone_machine_profile_v18")||"null");
- const clamp=v=>Math.max(0,Math.min(100,+v||0));
- function parseList(id){
-   const raw=(document.getElementById(id)?.value||"").trim();
-   if(!raw)return null;
-   const a=raw.split(/[;,\s]+/).filter(Boolean).map(v=>clamp(v));
-   return a.length===21?a:null;
- }
- function putList(id,a){const el=document.getElementById(id);if(el)el.value=(a||[]).map(v=>(+v||0).toFixed(1).replace(/\.0$/,'' )).join(",");}
- function status(msg,good=true){const e=document.getElementById("machineProfileStatus");if(e){e.className="status "+(good?"good":"warn");e.textContent=msg;}}
- function getBase(r,c){return clamp(r[c.toLowerCase()+"k"]);}
- function actuals(){const o={};for(const c of colors){const a=parseList("actual"+c);if(!a)return null;o[c]=a;}return o;}
- function learn(){
-   if(!window.getInkRows || !window.getInkRows().length){status("Hãy phân tích artwork trước khi học profile.",false);return;}
-   const rr=window.getInkRows(); if(rr.length!==21){status("V18 cần đúng 21 zone để học profile theo máy này.",false);return;}
-   const a=actuals();if(!a){status("Mỗi màu cần đúng 21 giá trị, ví dụ 0,6,15,...,0.",false);return;}
-   const bias={K:[],M:[],C:[],Y:[]}, maps={K:[],M:[],C:[],Y:[]};
-   for(const c of colors){
-     bias[c]=a[c].map((v,i)=>clamp(v-getBase(rr[i],c)));
-     maps[c]=rr.map((r,i)=>({x:clamp(+r[c.toLowerCase()]||0),y:clamp(a[c][i])}));
-   }
-   profile={version:"V18",mode,bias,maps,actual:a,createdAt:new Date().toISOString(),machine:{W:+document.getElementById("sw").value||720,H:+document.getElementById("sh").value||520,zones:+document.getElementById("zones").value||21}};
-   localStorage.setItem("inkzone_machine_profile_v18",JSON.stringify(profile));
-   status(mode==="zone"?"Đã học Machine Profile theo từng zone.":"Đã học Machine Profile theo Coverage → Ink Key.");
-   if(window.reapplyMachineProfile)window.reapplyMachineProfile();
- }
- function mapInterp(x,pts){
-   pts=[...(pts||[])].sort((a,b)=>a.x-b.x); if(!pts.length)return x;
-   // Average duplicate coverage points, which is common in real jobs.
-   const q=[]; for(const p of pts){const last=q[q.length-1];if(last&&Math.abs(last.x-p.x)<1e-6)last.y=(last.y+p.y)/2;else q.push({x:p.x,y:p.y});}
-   if(q.length===1)return clamp(q[0].y); if(x<=q[0].x)return clamp(q[0].y); if(x>=q[q.length-1].x)return clamp(q[q.length-1].y);
-   for(let i=1;i<q.length;i++)if(x<=q[i].x){const a=q[i-1],b=q[i],t=(x-a.x)/(b.x-a.x||1);return clamp(a.y+(b.y-a.y)*t)} return clamp(x);
- }
- function apply(rr){
-   if(!profile)return rr;
-   return rr.map((r,i)=>{
-     for(const c of colors){
-       const k=c.toLowerCase()+"k";
-       if(profile.mode==="coverage") r[k]=mapInterp(+r[c.toLowerCase()]||0,profile.maps?.[c]);
-       else r[k]=clamp(getBase(r,c)+(+profile.bias?.[c]?.[i]||0));
-     }
-     return r;
-   });
- }
- window.applyMachineProfileToRows=apply;
- window.reapplyMachineProfile=()=>{if(window.getInkRows&&window.getInkRows().length){apply(window.getInkRows());if(window.refreshInkUI)window.refreshInkUI();}};
- window.getMachineProfile=()=>profile;
- document.getElementById("learnFromActual")?.addEventListener("click",learn);
- document.getElementById("clearMachineProfile")?.addEventListener("click",()=>{profile=null;localStorage.removeItem("inkzone_machine_profile_v18");status("Đã xóa Machine Profile. App quay về Fountain/Calibration thông thường.");});
- document.getElementById("toggleLearnMode")?.addEventListener("click",()=>{mode=mode==="zone"?"coverage":"zone";if(document.getElementById("toggleLearnMode"))document.getElementById("toggleLearnMode").textContent="Chế độ: "+(mode==="zone"?"Zone Bias":"Coverage Map");status(mode==="zone"?"Zone Bias: bù sai lệch riêng Zone 01→21.":"Coverage Map: dùng profile Coverage→Ink Key học từ bài thực tế.");});
- document.getElementById("fillFromCurrent")?.addEventListener("click",()=>{const rr=window.getInkRows?window.getInkRows():[];if(rr.length!==21){status("Chưa có đủ 21 zone để điền dữ liệu hiện tại.",false);return;}for(const c of colors)putList("actual"+c,rr.map(r=>getBase(r,c)));status("Đã điền từ kết quả hiện tại. Hãy sửa thành số Ink Key thực tế trên máy rồi bấm Học.",false);});
- document.getElementById("saveMachineProfile")?.addEventListener("click",()=>{if(!profile){status("Chưa có profile để lưu.",false);return;}localStorage.setItem("inkzone_machine_profile_v18",JSON.stringify(profile));status("Đã lưu Machine Profile trên điện thoại.");});
- document.getElementById("loadMachineProfile")?.addEventListener("click",()=>{try{profile=JSON.parse(localStorage.getItem("inkzone_machine_profile_v18")||"null");if(!profile)throw 0;for(const c of colors)putList("actual"+c,profile.actual?.[c]);status("Đã nạp Machine Profile.");if(window.reapplyMachineProfile)window.reapplyMachineProfile();}catch(e){status("Chưa có Machine Profile đã lưu.",false);}});
- if(profile){for(const c of colors)putList("actual"+c,profile.actual?.[c]);}
-})();
-</script>
 
 <script>
 (function(){
@@ -1023,107 +867,44 @@ curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null
 </script>
 
 
+<section class="card" id="v18Learning">
+  <div class="title">📷 V18 • HỌC INK KEY TỪ ẢNH MÁY</div>
+  <p class="small">Đưa ảnh chụp Machine View thực tế vào đây. V18 đọc OCR để tạo dữ liệu 21 zone, sau đó bạn kiểm tra/sửa trước khi lưu calibration.</p>
+  <div class="v18-grid">
+    <label>Ảnh Machine View<input id="v18Shot" type="file" accept="image/*"></label>
+    <label>Màu<select id="v18Color"><option>K</option><option>M</option><option>C</option><option>Y</option></select></label>
+  </div>
+  <div class="v18-actions"><button id="v18OCR">🔎 Đọc ảnh</button><button id="v18UseShot" class="secondary">Dùng dữ liệu đã xác nhận</button><button id="v18Clear" class="secondary">Xóa</button></div>
+  <div class="v18-preview-wrap"><img id="v18ShotPreview" alt="Machine View screenshot"><div id="v18OCRStatus" class="small">Chưa có ảnh.</div></div>
+  <div class="v18-table-wrap"><table class="v18-table"><thead><tr><th>Zone</th><th>OCR</th><th>Giá trị xác nhận</th><th></th></tr></thead><tbody id="v18Rows"></tbody></table></div>
+  <div class="v18-actions"><button id="v18SaveProfile">💾 Lưu profile</button><button id="v18LoadProfile" class="secondary">Nạp profile</button><button id="v18Export" class="secondary">Xuất JSON</button></div>
+  <p class="small">OCR chỉ là bước nhập liệu. V18 không tự coi số OCR là đúng. Bạn xác nhận bảng trước khi lưu.</p>
+</section>
+<section class="card" id="v18Fountain">
+  <div class="title">🛢 V18 • INK FOUNTAIN THỰC TẾ</div>
+  <div class="v18-fountain-grid">
+    <label>K<input id="fK" type="number" step="0.1" value="6"></label>
+    <label>M<input id="fM" type="number" step="0.1" value="12"></label>
+    <label>C<input id="fC" type="number" step="0.1" value="15"></label>
+    <label>Y<input id="fY" type="number" step="0.1" value="23"></label>
+  </div>
+  <p class="small">Mặc định theo dữ liệu máy bạn đã cung cấp: K=6, M=12, C=15, Y=23.</p>
+</section>
 <script>
-(()=>{
-  const $=id=>document.getElementById(id);
-  const ov=$("v17Overlay"), stage=$("v17Stage"), canvas=$("v17Canvas");
-  if(!ov||!canvas)return;
-  let color="K", sheet=false, zones=true, selected=-1, opacity=1, zoom=1, panX=0, panY=0;
-  let drag=false,lastX=0,lastY=0,downX=0,downY=0;
-
-  function rows(){return window.getInkRows?window.getInkRows():[]}
-  function keyName(){return color.toLowerCase()+"k"}
-  function source(){
-    const c=$("preview");
-    return c&&c.width>10&&c.height>10?c:null;
-  }
-  function layout(){
-    const w=innerWidth,h=innerHeight;
-    const sw=+$("sw").value||720, sh=+$("sh").value||520;
-    const aw=+$("aw").value||sw, ah=+$("ah").value||sh;
-    const ox0=$("ox").value, oy0=$("oy").value;
-    const ox=(ox0==="auto"||ox0==="")?(sw-aw)/2:+ox0||0;
-    const oy=(oy0==="auto"||oy0==="")?(sh-ah)/2:+oy0||0;
-    const fit=Math.min((w-10)/sw,(h-10)/sh)*zoom;
-    const sx=sw*fit, sy=sh*fit, left=(w-sx)/2+panX, top=(h-sy)/2+panY;
-    return {w,h,sw,sh,aw,ah,ox,oy,fit,sx,sy,left,top};
-  }
-  function draw(){
-    const ctx=canvas.getContext("2d");
-    const w=innerWidth,h=innerHeight,dpr=devicePixelRatio||1;
-    canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);canvas.style.width=w+"px";canvas.style.height=h+"px";
-    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.fillStyle="#05080f";ctx.fillRect(0,0,w,h);
-    const L=layout(), c=source();
-    ctx.fillStyle="#fff";ctx.fillRect(L.left,L.top,L.sx,L.sy);
-    if(c){
-      const ix=L.left+L.ox*L.fit, iy=L.top+L.oy*L.fit, iw=L.aw*L.fit, ih=L.ah*L.fit;
-      ctx.globalAlpha=opacity;ctx.drawImage(c,ix,iy,iw,ih);ctx.globalAlpha=1;
-    }
-    if(zones){
-      ctx.save();ctx.font=`${Math.max(11,Math.min(18,13*L.fit))}px -apple-system,BlinkMacSystemFont,Arial`;
-      const rr=rows();
-      for(let i=0;i<=21;i++){
-        const x=L.left+L.sx*i/21;
-        ctx.strokeStyle=i===0||i===21?"#11182799":"#11182755";ctx.lineWidth=i===0||i===21?2:1;
-        ctx.beginPath();ctx.moveTo(x,L.top);ctx.lineTo(x,L.top+L.sy);ctx.stroke();
-        if(i<21){
-          const r=rr[i], v=r?Math.max(0,Math.min(100,+r[keyName()]||0)):0;
-          const cx=x+L.sx/42;
-          const label=`${String(i+1).padStart(2,"0")}  ${v.toFixed(0)}`;
-          const bw=Math.min(L.sx/21-4,72), bh=25, by=L.top+8;
-          ctx.fillStyle=i===selected?"#111827e8":"#ffffffdd";
-          ctx.fillRect(cx-bw/2,by,bw,bh);
-          ctx.fillStyle=i===selected?"#fff":"#111827";
-          ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(label,cx,by+bh/2);
-          const barH=Math.max(8,L.sy*.48), barW=Math.max(6,L.sx/21*.18), bx=cx-barW/2, by2=L.top+L.sy-barH-25;
-          ctx.fillStyle="#e5e7eb";ctx.fillRect(bx,by2,barW,barH);
-          ctx.fillStyle="#111827";ctx.fillRect(bx,by2+barH*(1-v/100),barW,barH*v/100);
-        }
-      }
-      ctx.restore();
-    }
-    $("v17Mode").textContent=`${color} • 21 zone • ${sheet?"MACHINE SHEET":"ARTWORK"}`;
-  }
-  function open(){ov.classList.add("open");ov.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";fit();}
-  function close(){ov.classList.remove("open");ov.setAttribute("aria-hidden","true");document.body.style.overflow="";selected=-1;$("v17Panel").classList.remove("open");}
-  function fit(){zoom=1;panX=0;panY=0;draw();}
-  function selectZone(i){
-    const rr=rows(); if(!rr[i])return;
-    selected=i;$("v17Zone").textContent=`Zone ${String(i+1).padStart(2,"0")} • ${color}`;
-    const v=Math.max(0,Math.min(100,+rr[i][keyName()]||0));
-    $("v17Value").textContent=v.toFixed(1);$("v17Slider").value=v;$("v17Panel").classList.add("open");draw();
-  }
-  function setValue(v){
-    const rr=rows();if(selected<0||!rr[selected])return;
-    rr[selected][keyName()]=Math.max(0,Math.min(100,+v||0));
-    $("v17Value").textContent=rr[selected][keyName()].toFixed(1);$("v17Slider").value=rr[selected][keyName()];
-    if(window.refreshInkUI)window.refreshInkUI();draw();
-  }
-  $("v17Open")?.addEventListener("click",open);
-  $("artFullBtn")?.addEventListener("dblclick",open);
-  $("v17Close").onclick=close;$("v17Fit").onclick=fit;
-  $("v17Sheet").onclick=()=>{sheet=!sheet;draw()};
-  $("v17Zones").onclick=()=>{zones=!zones;draw()};
-  $("v17Opacity").oninput=e=>{opacity=+e.target.value;draw()};
-  document.querySelectorAll(".v17-color button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".v17-color button").forEach(x=>x.classList.remove("active"));b.classList.add("active");color=b.dataset.c;if(selected>=0)selectZone(selected);draw()});
-  $("v17Slider").oninput=e=>setValue(e.target.value);
-  document.querySelectorAll(".v17-adj button").forEach(b=>b.onclick=()=>{const rr=rows();if(selected>=0)setValue((+rr[selected][keyName()]||0)+(+b.dataset.d||0))});
-  canvas.addEventListener("pointerdown",e=>{drag=true;lastX=e.clientX;lastY=e.clientY;downX=e.clientX;downY=e.clientY;canvas.setPointerCapture?.(e.pointerId)});
-  canvas.addEventListener("pointermove",e=>{if(!drag)return;panX+=e.clientX-lastX;panY+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;draw()});
-  canvas.addEventListener("pointerup",e=>{drag=false});
-  canvas.addEventListener("click",e=>{
-    if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>10)return;
-    const L=layout(), x=(e.clientX-L.left)/L.sx;
-    if(x<0||x>1)return;
-    const z=Math.floor(x*21);selectZone(Math.max(0,Math.min(20,z)));
-  });
-  // expose button in artwork section
-  const tb=document.querySelector(".v16-toolbar");
-  if(tb&&!$("v17Open")){const b=document.createElement("button");b.id="v17Open";b.textContent="🎛 CHỈNH MỰC TRÊN ẢNH";tb.insertBefore(b,tb.firstChild);}
-  window.addEventListener("resize",()=>{if(ov.classList.contains("open"))draw()});
-  window.addEventListener("load",()=>setTimeout(draw,700));
+(()=>{const $=id=>document.getElementById(id), S={ocr:[],vals:Array(21).fill(0),color:"K",img:null};
+const rows=$("v18Rows");
+function draw(){rows.innerHTML="";for(let i=0;i<21;i++){const tr=document.createElement("tr");tr.innerHTML=`<td>${String(i+1).padStart(2,"0")}</td><td>${S.ocr[i]??""}</td><td><input type="number" step="0.1" inputmode="decimal" data-z="${i}" value="${S.vals[i]??0}"></td><td>${S.ocr[i]==null?"":"Kiểm tra"}</td>`;rows.appendChild(tr)}}
+draw();
+$("v18Color").onchange=e=>S.color=e.target.value;
+$("v18Shot").onchange=e=>{const f=e.target.files?.[0];if(!f)return;const im=$("v18ShotPreview");im.src=URL.createObjectURL(f);im.style.display="block";S.img=im;$("v18OCRStatus").textContent="Đã nhận ảnh. Bấm Đọc ảnh."};
+rows.oninput=e=>{if(e.target.dataset.z!==undefined)S.vals[+e.target.dataset.z]=Number(e.target.value)||0};
+async function tess(){if(window.Tesseract)return window.Tesseract;await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});return window.Tesseract}
+$("v18OCR").onclick=async()=>{if(!S.img){$("v18OCRStatus").textContent="Chưa có ảnh.";return} $("v18OCRStatus").textContent="Đang OCR…";try{const T=await tess();const r=await T.recognize(S.img,"eng",{logger:m=>{if(m.progress!=null)$("v18OCRStatus").textContent=`OCR ${Math.round(m.progress*100)}%`}});const ns=(r.data.text||"").replace(/,/g,".").match(/\b\d{1,3}(?:\.\d{1,2})?\b/g)||[];S.ocr=ns.map(Number).filter(n=>n>=0&&n<=100).slice(-21);S.vals=Array(21).fill(0);S.ocr.forEach((n,i)=>S.vals[21-S.ocr.length+i]=n);draw();$("v18OCRStatus").textContent="OCR xong. Hãy kiểm tra từng số trước khi lưu."}catch(e){console.error(e);$("v18OCRStatus").textContent="OCR thất bại. Bạn có thể nhập/sửa thủ công trong bảng."}};
+$("v18UseShot").onclick=()=>{$("v18OCRStatus").textContent=`Đã xác nhận dữ liệu ${S.color}. Bấm Lưu profile để lưu.`};
+$("v18SaveProfile").onclick=()=>{const p=JSON.parse(localStorage.getItem("inkzone_v18_profile")||"{}");p.version="V18";p[S.color]=[...S.vals];p.fountain={K:+$("fK").value||0,M:+$("fM").value||0,C:+$("fC").value||0,Y:+$("fY").value||0};localStorage.setItem("inkzone_v18_profile",JSON.stringify(p));$("v18OCRStatus").textContent="Đã lưu profile V18."};
+$("v18LoadProfile").onclick=()=>{const p=JSON.parse(localStorage.getItem("inkzone_v18_profile")||"null");if(!p){$("v18OCRStatus").textContent="Chưa có profile.";return}if(Array.isArray(p[S.color])){S.vals=p[S.color];draw()}if(p.fountain){$("fK").value=p.fountain.K;$("fM").value=p.fountain.M;$("fC").value=p.fountain.C;$("fY").value=p.fountain.Y}$("v18OCRStatus").textContent="Đã nạp profile."};
+$("v18Export").onclick=()=>{const b=new Blob([localStorage.getItem("inkzone_v18_profile")||"{}"],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="InkZone_V18_Calibration.json";a.click()};
+$("v18Clear").onclick=()=>{$("v18Shot").value="";$("v18ShotPreview").style.display="none";S.img=null;S.ocr=[];S.vals=Array(21).fill(0);draw();$("v18OCRStatus").textContent="Đã xóa."};
 })();
-</script>
-
-</body>
+</script></body>
 </html>
