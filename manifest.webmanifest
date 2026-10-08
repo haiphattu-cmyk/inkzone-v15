@@ -1,0 +1,10 @@
+{
+  "name": "InkZone V15",
+  "short_name": "InkZone",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f7",
+  "theme_color": "#111827",
+  "lang": "vi",
+  "icons": []
+}
