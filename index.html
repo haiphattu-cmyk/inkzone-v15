@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V15.4</title>
+<title>InkZone V15.4.1</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -31,7 +31,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><h1>InkZone V15.4</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • KMCY • Ink Fountain • Coverage → Ink Key</div></header>
+<header><h1>InkZone V15.4.1</h1><div class="sub">Standalone Mobile • PDF/JPEG • 21 zone • KMCY • Ink Fountain • Correction • Coverage → Ink Key</div></header>
 <main>
 
 <section class="card">
@@ -283,7 +283,7 @@ $("analyze").onclick=async()=>{
   cf:0,mf:0,yf:0,kf:0,til:v.c+v.m+v.y+v.k,warn:v.c+v.m+v.y+v.k>tac}));
   if(window.applyFountainToRows) rows=window.applyFountainToRows(rows);
   $("summary").textContent=`Khổ máy ${sw}×${$("sh").value} mm • ${n} zone • zone ${(sw/n).toFixed(2)} mm • artwork ${aw.toFixed(2)}×${ah.toFixed(2)} mm • X=${ox.toFixed(2)} mm • ${$("sizeMode").value==="pdf"?"PDF/CropBox":"nhập tay"}`;
-  $("status").className="status good";$("status").textContent="Hoàn tất. Coverage → Ink Fountain → Ink Key.";
+  $("status").className="status good";$("status").textContent="Hoàn tất. Coverage → Correction → Ink Fountain → Ink Key.";
   render();$("export").disabled=false;
  }catch(e){$("status").className="status warn";$("status").textContent="Lỗi phân tích: "+e.message}
 };
