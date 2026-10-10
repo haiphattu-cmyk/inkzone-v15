@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="manifest.webmanifest">
-<title>InkZone V18.4.1</title>
+<title>InkZone V18.5</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#667085;--line:#d7dde5;--dark:#111827;--ok:#047857;--warn:#b45309}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -116,7 +116,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 @media(max-width:600px){.v18-grid{grid-template-columns:1fr}.v18-fountain-grid{grid-template-columns:repeat(2,1fr)}}
 </style></head>
 <body>
-<header><h1>InkZone V18.4.1</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Ink Fountain • Calibration • Coverage → Correction → Fountain → Ink Key • Machine Screenshot OCR</div></header>
+<header><h1>InkZone V18.5</h1><div class="sub">Machine View • Artwork Fullscreen • 21 Ink Key • KMCY • Ink Fountain • Calibration • Coverage → Correction → Fountain → Ink Key • Machine Screenshot OCR • JPEG DPI Fix</div></header>
 <main>
 
 <section class="card">
@@ -143,7 +143,7 @@ td input{width:68px;padding:6px;text-align:center}.calgrid{display:grid;grid-tem
 <div><label>Offset Y (mm)</label><input id="oy" type="text" value="auto" inputmode="decimal"></div>
 </div>
 <div id="boxInfo" class="status" style="margin-top:8px">Chưa đọc PDF box.</div>
-<div class="small" style="margin-top:8px">Mặc định artwork căn giữa. Zone chia trên toàn bộ khổ máy, không chia theo artwork. Với PDF, V15.2 dùng vùng nhìn thấy (CropBox) làm kích thước tự động; nếu file có bleed/trim đặc biệt, có thể chọn “Nhập tay”.</div>
+<div class="small" style="margin-top:8px">Mặc định artwork căn giữa. Zone chia trên toàn bộ khổ máy, không chia theo artwork. Với PDF, PDF tự đọc CropBox. JPEG tự đọc DPI từ JFIF/EXIF nếu có; nếu thiếu DPI, nhập W/H vật lý thay vì dùng giả định 96 DPI. Nếu file có bleed/trim đặc biệt, chọn “Nhập tay”.</div>
 </section>
 
 <section class="card">
@@ -374,16 +374,89 @@ async function renderPdf(file){
  return {canvas,aw:+$("aw").value,ah:+$("ah").value,pageNo,cropW:aw,cropH:ah,mediaW,mediaH};
 }
 
+
+async function readJpegResolution(file){
+  // Read physical resolution from JFIF or EXIF metadata, if present.
+  const buf=await file.arrayBuffer(), d=new DataView(buf), u8=new Uint8Array(buf);
+  if(d.byteLength<4 || d.getUint16(0,false)!==0xFFD8) return null;
+  let jfif=null, exif=null, pos=2;
+  while(pos+4<=d.byteLength){
+    if(u8[pos]!==0xFF){pos++;continue}
+    while(pos<d.byteLength && u8[pos]===0xFF)pos++;
+    if(pos>=d.byteLength)break;
+    const marker=u8[pos++];
+    if(marker===0xD9||marker===0xDA)break;
+    if(marker===0x01||(marker>=0xD0&&marker<=0xD7))continue;
+    if(pos+2>d.byteLength)break;
+    const len=d.getUint16(pos,false);
+    if(len<2||pos+len>d.byteLength)break;
+    const start=pos+2, end=pos+len;
+    if(marker===0xE0 && end-start>=12 &&
+       String.fromCharCode(...u8.slice(start,start+5))==="JFIF\0"){
+      const unit=u8[start+7], x=d.getUint16(start+8,false), y=d.getUint16(start+10,false);
+      if(x>0&&y>0){
+        if(unit===1) jfif={xDpi:x,yDpi:y,source:"JFIF"};
+        else if(unit===2) jfif={xDpi:x*2.54,yDpi:y*2.54,source:"JFIF dots/cm"};
+      }
+    }
+    if(marker===0xE1 && end-start>=14 &&
+       String.fromCharCode(...u8.slice(start,start+6))==="Exif\0\0"){
+      const t=start+6;
+      try{
+        const little=String.fromCharCode(u8[t],u8[t+1])==="II";
+        const get16=o=>d.getUint16(o,little), get32=o=>d.getUint32(o,little);
+        if(get16(t+2)===42){
+          const ifd=t+get32(t+4), n=get16(ifd);
+          let xr=null,yr=null,unit=2;
+          for(let i=0;i<n;i++){
+            const e=ifd+2+i*12;if(e+12>end)break;
+            const tag=get16(e),type=get16(e+2),count=get32(e+4),val=e+8;
+            if(tag===0x0128)unit=get16(val);
+            if((tag===0x011A||tag===0x011B)&&type===5&&count>=1){
+              const q=t+get32(val);
+              if(q+8<=d.byteLength){
+                const num=get32(q),den=get32(q+4);
+                if(den>0){if(tag===0x011A)xr=num/den;else yr=num/den;}
+              }
+            }
+          }
+          if(xr>0&&yr>0){
+            if(unit===3){xr*=2.54;yr*=2.54}
+            if(unit===2||unit===3)exif={xDpi:xr,yDpi:yr,source:"EXIF"};
+          }
+        }
+      }catch(_){}
+    }
+    pos+=len;
+  }
+  return exif||jfif;
+}
+
 async function renderJpeg(file){
- const img=new Image();img.src=URL.createObjectURL(file);await img.decode();
- if(!$("aw").value)$("aw").value=(img.naturalWidth/96*25.4).toFixed(2);
- if(!$("ah").value)$("ah").value=(img.naturalHeight/96*25.4).toFixed(2);
+ const img=new Image(), objectUrl=URL.createObjectURL(file);img.src=objectUrl;await img.decode();
+ const res=await readJpegResolution(file);
+ let dimMsg="";
+ if($("sizeMode").value!=="manual"){
+   if(res && res.xDpi>0 && res.yDpi>0){
+     $("aw").value=(img.naturalWidth/res.xDpi*25.4).toFixed(2);
+     $("ah").value=(img.naturalHeight/res.yDpi*25.4).toFixed(2);
+     dimMsg=`Đọc kích thước JPEG từ ${res.source}: ${res.xDpi.toFixed(2)} × ${res.yDpi.toFixed(2)} DPI.`;
+     $("boxInfo").className="status good";
+   }else{
+     $("aw").value="";$("ah").value="";
+     dimMsg="JPEG không có DPI đáng tin cậy trong metadata. Nhập Artwork W/H theo kích thước vật lý thực tế; app không tự giả định 96 DPI.";
+     $("boxInfo").className="status warn";
+   }
+ }else{
+   dimMsg="Chế độ nhập tay: dùng Artwork W/H bạn đã nhập.";
+   $("boxInfo").className="status";
+ }
  const canvas=$("preview"),scale=Math.min(1800/img.naturalWidth,1800/img.naturalHeight,1);
  canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
  const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,canvas.width,canvas.height);canvas.style.display="block";
- $("boxInfo").className="status";
- $("boxInfo").textContent=`JPEG • kích thước vật lý lấy từ Artwork W/H. Nếu để trống, V15.3 dùng 96 DPI làm giá trị tạm.`;
- $("fileInfo").textContent=`JPEG • ${img.naturalWidth} × ${img.naturalHeight}px`;
+ $("boxInfo").textContent=`JPEG • ${img.naturalWidth} × ${img.naturalHeight}px • ${dimMsg}`;
+ $("fileInfo").textContent=`JPEG • ${img.naturalWidth} × ${img.naturalHeight}px • ${res?`DPI ${res.xDpi.toFixed(1)}×${res.yDpi.toFixed(1)}`:"không có DPI metadata"}`;
+ URL.revokeObjectURL(objectUrl);
  return {canvas,aw:+$("aw").value,ah:+$("ah").value};
 }
 
@@ -901,7 +974,7 @@ curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null
     <button id="v184Export" class="secondary">Xuất JSON</button>
   </div>
   <div id="v184ProfileStatus" class="status">Chưa có dữ liệu học.</div>
-  <div class="v184-note" style="margin-top:8px">Nếu máy ảnh chỉ hiển thị zone 01–20, V18.4.1 giữ zone 21 = 0. Không tự điền số 0 cho ô OCR không đọc được.</div>
+  <div class="v184-note" style="margin-top:8px">Nếu máy ảnh chỉ hiển thị zone 01–20, V18.5 giữ zone 21 = 0. Không tự điền số 0 cho ô OCR không đọc được.</div>
 </section>
 
 <script>
@@ -923,7 +996,7 @@ curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null
  function putParsed(groups){const target=$('v184Mode').value==='one'?[$('v184Color').value]:colors;let mapped=0;groups.forEach((items,ri)=>{const c=target.length===1?target[0]:colors[ri];if(!c)return;let nums=items.map(x=>x.n);if(nums.length>21)nums=nums.slice(-21);if(nums.length===20)nums.push(0);if(nums.length===21){S.data[c]=nums.map(v=>+v.toFixed(1));mapped++}});render();return mapped}
  $('v184Read').onclick=async()=>{if(!S.img){$('v184Status').textContent='Chưa có ảnh.';return}$('v184Status').textContent='Đang chuẩn hóa ảnh và OCR bảng…';try{const T=await tess(),c=preprocess(S.img);const r=await T.recognize(c,'eng',{logger:m=>{if(m.status&&m.progress!=null)$('v184Status').textContent=`${m.status} ${Math.round(m.progress*100)}%`},tessedit_pageseg_mode:6});const groups=parseRows(r.data.words);const n=putParsed(groups);$('v184Status').className=n?'status warn':'status warn';$('v184Status').textContent=n?`Đã nhận dạng ${n}/4 hàng. Kiểm tra 84 ô trước khi xác nhận.`:'OCR chưa đọc đủ 4 hàng. Không tự gán số 0. Bạn có thể sửa bảng hoặc dùng dữ liệu mẫu.'}catch(e){console.error(e);$('v184Status').className='status warn';$('v184Status').textContent='OCR thất bại. Không tự gán 0; hãy sửa bảng hoặc dùng dữ liệu mẫu.'}};
  $('v184Confirm').onclick=()=>{const missing=colors.flatMap(c=>S.data[c].map((v,i)=>v==null?`${c}${i+1}`:null).filter(Boolean));S.confirmed=missing.length===0;if(!S.confirmed){$('v184Status').className='status warn';$('v184Status').textContent=`Còn ${missing.length} ô chưa có giá trị. Không xác nhận.`;return}$('v184Status').className='status good';$('v184Status').textContent='Đã xác nhận bộ dữ liệu K/M/C/Y • 21 zone.'};
- function profile(){return {version:'V18.4.1',K:S.data.K.map(v=>+v||0),M:S.data.M.map(v=>+v||0),C:S.data.C.map(v=>+v||0),Y:S.data.Y.map(v=>+v||0),savedAt:new Date().toISOString()}}
+ function profile(){return {version:'V18.5',K:S.data.K.map(v=>+v||0),M:S.data.M.map(v=>+v||0),C:S.data.C.map(v=>+v||0),Y:S.data.Y.map(v=>+v||0),savedAt:new Date().toISOString()}}
  $('v184Learn').onclick=()=>{if(!S.confirmed){$('v184ProfileStatus').className='status warn';$('v184ProfileStatus').textContent='Hãy xác nhận 84 giá trị trước khi học profile.';return}localStorage.setItem('inkzone_machine_actual_v184',JSON.stringify(profile()));$('v184ProfileStatus').className='status good';$('v184ProfileStatus').textContent='Đã học Machine Profile từ bộ Ink Key thực tế.'};
  $('v184Save').onclick=()=>{if(!S.confirmed){$('v184ProfileStatus').className='status warn';$('v184ProfileStatus').textContent='Hãy xác nhận dữ liệu trước khi lưu.';return}localStorage.setItem('inkzone_machine_actual_v184',JSON.stringify(profile()));$('v184ProfileStatus').className='status good';$('v184ProfileStatus').textContent='Đã lưu Machine Profile trên điện thoại.'};
  $('v184Load').onclick=()=>{const p=JSON.parse(localStorage.getItem('inkzone_machine_actual_v184')||'null');if(!p){$('v184ProfileStatus').textContent='Chưa có Machine Profile.';return}for(const c of colors)S.data[c]=(p[c]||Array(N).fill(0)).slice(0,N);render();S.confirmed=true;$('v184ProfileStatus').className='status good';$('v184ProfileStatus').textContent='Đã nạp Machine Profile thực tế.'};
@@ -932,7 +1005,7 @@ curves,correction:window.getCorrectionProfile?window.getCorrectionProfile():null
 </script>
 
 <script>
-// V18.4.1: if an actual per-zone profile exists, apply its measured deviation as a zone correction.
+// V18.5: if an actual per-zone profile exists, apply its measured deviation as a zone correction.
 (()=>{const colors=['K','M','C','Y'];const raw=localStorage.getItem('inkzone_machine_actual_v184');if(!raw)return;try{const p=JSON.parse(raw);window.inkZoneActualProfile=p;const old=window.applyFountainToRows;if(typeof old==='function'){window.applyFountainToRows=function(rows){const out=old(rows);out.forEach((r,i)=>{for(const c of colors){const key=c.toLowerCase()+'k';if(!Array.isArray(p[c])||p[c][i]==null)continue;const measured=+p[c][i]||0;const calculated=+r[key]||0;const cov=+r[c.toLowerCase()]||0;if(cov===0){r[key]=0;continue}const bias=measured-calculated;r[key]=Math.max(0,Math.min(100,calculated+bias));}});return out}}}catch(e){console.warn(e)}})();
 </script>
 </body></html>
